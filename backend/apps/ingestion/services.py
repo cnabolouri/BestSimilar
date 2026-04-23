@@ -46,3 +46,9 @@ class TMDBClient:
 
     def tv_genres(self) -> dict:
         return self.get("/genre/tv/list")
+    
+    def get_movie_watch_providers(self, tmdb_id: int) -> dict:
+        return self.get(f"/movie/{tmdb_id}/watch/providers")
+
+    def get_tv_watch_providers(self, tmdb_id: int) -> dict:
+        return self.get(f"/tv/{tmdb_id}/watch/providers")

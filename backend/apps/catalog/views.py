@@ -63,5 +63,12 @@ class TitleDetailAPIView(RetrieveAPIView):
     def get_queryset(self):
         return (
             Title.objects.all()
-            .prefetch_related("genres", "keywords", "themes", "credits__person")
+            .prefetch_related(
+                "genres",
+                "keywords",
+                "themes",
+                "credits__person",
+                "watch_providers",
+                "news_items",
+            )
         )

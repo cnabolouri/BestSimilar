@@ -79,3 +79,36 @@ class Title(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.media_type})"
+    
+class TitleWatchProvider(TimeStampedModel):
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="watch_providers")
+
+    country_code = models.CharField(max_length=10, db_index=True, default="US")
+    provider_type = models.CharField(max_length=20, db_index=True)  # flatrate, rent, buy, free
+    provider_id = models.PositiveIntegerField()
+    provider_name = models.CharField(max_length=255)
+    logo_path = models.CharField(max_length=255, blank=True)
+    display_priority = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("title", "country_code", "provider_type", "provider_id")
+        indexes = [
+            models.Index(fields=["title", "country_code", "provider_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title.name} - {self.provider_name} ({self.provider_type})"
+    
+class TitleNewsItem(TimeStampedModel):
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="news_items")
+    source_name = models.CharField(max_length=255)
+    headline = models.CharField(max_length=500)
+    summary = models.TextField(blank=True)
+    url = models.URLField()
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-published_at", "-created_at"]
+
+    def __str__(self):
+        return f"{self.title.name} - {self.headline}"

@@ -16,6 +16,7 @@ import { SearchPersonCardSkeleton } from "@/components/cards/search-person-card-
 import { DiscoverResultCardSkeleton } from "@/components/cards/discover-result-card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 
+import Link from "next/link";
 
 const tabs = [
   { id: "title", label: "Title Search" },
@@ -261,9 +262,17 @@ export function SearchDiscoverTabs() {
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Titles
                 </h3>
-                <span className="text-xs text-muted-foreground">
-                  {searchResults.titles_count} results
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    {searchResults.titles_count} results
+                  </span>
+                  <Link
+                    href={`/search?q=${encodeURIComponent(searchResults.query)}`}
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    View full search page
+                  </Link>
+                </div>
               </div>
 
               {searchResults.titles.length > 0 ? (
@@ -319,9 +328,17 @@ export function SearchDiscoverTabs() {
               <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Discover results
               </h3>
-              <span className="text-xs text-muted-foreground">
-                {discoverResults.count} results
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {discoverResults.count} results
+                </span>
+                <Link
+                  href={`/discover?prompt=${encodeURIComponent(discoverResults.prompt)}&media_type=${discoverResults.media_type ?? "tv"}`}
+                  className="text-xs font-medium text-accent hover:underline"
+                >
+                  Open Discover page
+                </Link>
+              </div>
             </div>
 
             {discoverResults.results.length > 0 ? (

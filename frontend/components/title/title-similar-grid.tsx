@@ -1,4 +1,4 @@
-import { SimilarTitleCard } from "@/components/cards/similar-title-card";
+import { DiscoverResultCard } from "@/components/cards/discover-result-card";
 import type { SimilarTitle } from "@/types/title";
 
 export function TitleSimilarGrid({ items }: { items: SimilarTitle[] }) {
@@ -8,9 +8,10 @@ export function TitleSimilarGrid({ items }: { items: SimilarTitle[] }) {
         <h2 className="text-lg font-semibold">More like this</h2>
         <span className="text-xs text-muted-foreground">{items.length} results</span>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-        {items.map((item) => (
-          <SimilarTitleCard key={item.id} item={item} />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        {items.slice(0, 10).map((item) => (
+          <DiscoverResultCard key={item.id} item={item} />
         ))}
       </div>
     </div>

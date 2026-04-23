@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -33,8 +35,9 @@ export function DiscoverResultCard({ item }: { item: DiscoverResult }) {
         <div className="mt-4">
           <h3 className="text-sm font-semibold leading-5">{item.name}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{item.genres.slice(0, 3).join(" • ")}</p>
-          <p className="mt-3 text-xs font-medium text-accent">Score {item.similarity_score}</p>
-          {item.similarity_reasons[0] ? (
+          <p className="mt-3 text-xs font-medium text-accent">
+            Simcine Match {(item.similarity_score * 100).toFixed(1)}%
+          </p>          {item.similarity_reasons[0] ? (
             <p className="mt-2 text-xs leading-5 text-muted-foreground">{item.similarity_reasons[0]}</p>
           ) : null}
         </div>

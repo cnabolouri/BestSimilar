@@ -23,25 +23,27 @@ class Command(BaseCommand):
             for item in result.get("results", []):
                 tmdb_id = item["id"]
                 details = client.get_movie_details(tmdb_id)
+                watch_providers = client.get_movie_watch_providers(tmdb_id)
 
                 RawTMDBPayload.objects.create(
                     source_entity=RawTMDBPayload.SourceEntity.MOVIE,
                     external_id=str(tmdb_id),
                     payload=details,
                 )
-                upsert_movie(details)
+                upsert_movie(details, watch_provider_data=watch_providers)
 
         for page in range(1, tv_pages + 1):
             result = client.discover_tv(page=page)
             for item in result.get("results", []):
                 tmdb_id = item["id"]
                 details = client.get_tv_details(tmdb_id)
+                watch_providers = client.get_tv_watch_providers(tmdb_id)
 
                 RawTMDBPayload.objects.create(
                     source_entity=RawTMDBPayload.SourceEntity.TV,
                     external_id=str(tmdb_id),
                     payload=details,
                 )
-                upsert_tv(details)
+                upsert_tv(details, watch_provider_data=watch_providers)
 
         self.stdout.write(self.style.SUCCESS("Initial TMDB title seed completed."))

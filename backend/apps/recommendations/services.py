@@ -189,6 +189,12 @@ def get_similar_titles(source_title: Title, limit: int = 20):
 
         title.similarity_score = round(final_score, 4)
         title.similarity_reasons = reasons[:4]
+
+        if reasons:
+            title.match_explanation = f"Matched through {', '.join(reasons[:2]).lower()}."
+        else:
+            title.match_explanation = "Matched through related metadata and semantic similarity."
+
         results.append(title)
 
     results.sort(

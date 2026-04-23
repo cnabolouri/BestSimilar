@@ -3,8 +3,9 @@ from apps.people.models import Person
 from apps.taxonomy.models import Genre, Keyword
 from .normalizers import normalize_movie_payload, normalize_tv_payload, normalize_person_payload
 from apps.credits.models import TitleCredit
+from apps.catalog.models import Title, TitleWatchProvider
 
-def upsert_movie(data: dict) -> Title:
+def upsert_movie(data: dict, watch_provider_data: dict | None = None) -> Title:
     payload = normalize_movie_payload(data)
     obj, _ = Title.objects.update_or_create(
         tmdb_id=payload["tmdb_id"],
@@ -13,10 +14,12 @@ def upsert_movie(data: dict) -> Title:
     _attach_genres(obj, data)
     _attach_keywords(obj, data, media_type="movie")
     attach_credits(obj, data)
+    if watch_provider_data:
+        attach_watch_providers(obj, watch_provider_data)
     return obj
 
 
-def upsert_tv(data: dict) -> Title:
+def upsert_tv(data: dict, watch_provider_data: dict | None = None) -> Title:
     payload = normalize_tv_payload(data)
     obj, _ = Title.objects.update_or_create(
         tmdb_id=payload["tmdb_id"],
@@ -25,6 +28,8 @@ def upsert_tv(data: dict) -> Title:
     _attach_genres(obj, data)
     _attach_keywords(obj, data, media_type="tv")
     attach_credits(obj, data)
+    if watch_provider_data:
+        attach_watch_providers(obj, watch_provider_data)
     return obj
 
 def upsert_person(data: dict) -> Person:
@@ -138,3 +143,26 @@ def attach_credits(title: Title, data: dict) -> None:
             role_type=role_type,
             job_name=job,
         )
+        
+def attach_watch_providers(title: Title, data: dict) -> None:
+    results = data.get("results", {})
+    us_data = results.get("US")
+
+    if not us_data:
+        TitleWatchProvider.objects.filter(title=title, country_code="US").delete()
+        return
+
+    TitleWatchProvider.objects.filter(title=title, country_code="US").delete()
+
+    for provider_type in ["flatrate", "rent", "buy", "free"]:
+        providers = us_data.get(provider_type, [])
+        for provider in providers:
+            TitleWatchProvider.objects.create(
+                title=title,
+                country_code="US",
+                provider_type=provider_type,
+                provider_id=provider["provider_id"],
+                provider_name=provider["provider_name"],
+                logo_path=provider.get("logo_path", "") or "",
+                display_priority=provider.get("display_priority", 0) or 0,
+            )

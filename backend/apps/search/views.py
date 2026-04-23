@@ -1,8 +1,9 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.catalog.models import Title
+from apps.credits.models import TitleCredit
 from apps.people.models import Person
 from apps.search.serializers import SearchTitleSerializer, SearchPersonSerializer
 
@@ -28,13 +29,37 @@ class UnifiedSearchAPIView(APIView):
                 }
             )
 
-        title_queryset = (
-            Title.objects.filter(
-                Q(name__icontains=q) | Q(original_name__icontains=q)
-            )
-            .prefetch_related("genres")
-            .order_by("-popularity", "-vote_count", "name")[:limit]
+        ordering = request.query_params.get("ordering")
+        media_type = request.query_params.get("media_type")
+
+        title_queryset = Title.objects.filter(
+            Q(name__icontains=q) | Q(original_name__icontains=q)
         )
+
+        if media_type in {"movie", "tv"}:
+            title_queryset = title_queryset.filter(media_type=media_type)
+
+        title_queryset = title_queryset.prefetch_related(
+            "genres",
+            Prefetch(
+                "credits",
+                queryset=TitleCredit.objects.select_related("person").filter(role_type="actor"),
+            ),
+        )
+
+        allowed_ordering = {
+            "vote_average": ["-vote_average", "-vote_count", "name"],
+            "vote_count": ["-vote_count", "-vote_average", "name"],
+            "popularity": ["-popularity", "-vote_count", "name"],
+            "newest": ["-release_date", "-first_air_date", "name"],
+        }
+
+        if ordering in allowed_ordering:
+            title_queryset = title_queryset.order_by(*allowed_ordering[ordering])
+        else:
+            title_queryset = title_queryset.order_by("-popularity", "-vote_count", "name")
+
+        title_queryset = title_queryset[:limit]
 
         person_queryset = (
             Person.objects.filter(

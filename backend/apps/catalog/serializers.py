@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
-from apps.catalog.models import Title
+from apps.catalog.models import Title, TitleNewsItem
 from apps.taxonomy.models import Genre, Keyword, Theme
 from apps.credits.models import TitleCredit
+
+from apps.catalog.models import TitleWatchProvider
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -21,7 +23,30 @@ class ThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
         fields = ["id", "name", "type"]
+        
+class TitleNewsItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TitleNewsItem
+        fields = [
+            "source_name",
+            "headline",
+            "summary",
+            "url",
+            "published_at",
+        ]
 
+
+class TitleWatchProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TitleWatchProvider
+        fields = [
+            "country_code",
+            "provider_type",
+            "provider_id",
+            "provider_name",
+            "logo_path",
+            "display_priority",
+        ]
 
 class TitleCreditSerializer(serializers.ModelSerializer):
     person_id = serializers.IntegerField(source="person.id", read_only=True)
@@ -72,6 +97,9 @@ class TitleDetailSerializer(serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True, read_only=True)
     themes = ThemeSerializer(many=True, read_only=True)
     credits = TitleCreditSerializer(many=True, read_only=True)
+    watch_providers = TitleWatchProviderSerializer(many=True, read_only=True)
+    news_items = TitleNewsItemSerializer(many=True, read_only=True)
+    episode_duration_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -94,6 +122,7 @@ class TitleDetailSerializer(serializers.ModelSerializer):
             "last_air_date",
             "runtime_minutes",
             "episode_run_times",
+            "episode_duration_display",
             "seasons_count",
             "episodes_count",
             "age_rating",
@@ -105,6 +134,18 @@ class TitleDetailSerializer(serializers.ModelSerializer):
             "keywords",
             "themes",
             "credits",
+            "watch_providers",
+            "news_items",
             "created_at",
             "updated_at",
         ]
+
+    def get_episode_duration_display(self, obj):
+        runtimes = [rt for rt in obj.episode_run_times if isinstance(rt, int) and rt > 0]
+        if not runtimes:
+            return None
+        if len(set(runtimes)) == 1:
+            return f"{runtimes[0]} min"
+        return f"{min(runtimes)}–{max(runtimes)} min"
+    
+

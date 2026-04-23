@@ -5,10 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { searchAll } from "@/services/search";
 import type { UnifiedSearchResponse } from "@/types/search";
 import { UnifiedSearchResults } from "@/components/search/unified-search-results";
-
 import { SearchTitleCardSkeleton } from "@/components/cards/search-title-card-skeleton";
 import { SearchPersonCardSkeleton } from "@/components/cards/search-person-card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResultsToolbar } from "@/components/results/results-toolbar";
 
 export function SearchPageClient() {
   const params = useSearchParams();
@@ -19,6 +19,9 @@ export function SearchPageClient() {
   const [data, setData] = useState<UnifiedSearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [sortBy, setSortBy] = useState("relevance");
+  const [mediaType, setMediaType] = useState("all");
+
   useEffect(() => {
     if (!initialQ.trim()) return;
 
@@ -28,7 +31,10 @@ export function SearchPageClient() {
       setLoading(true);
       setError(null);
       try {
-        const response = await searchAll(initialQ.trim(), 12);
+        const response = await searchAll(initialQ.trim(), 12, {
+          ordering: sortBy,
+          media_type: mediaType,
+        });
         if (isMounted) setData(response);
       } catch {
         if (isMounted) setError("Search failed. Please try again.");
@@ -42,16 +48,27 @@ export function SearchPageClient() {
     return () => {
       isMounted = false;
     };
-  }, [initialQ]);
+  }, [initialQ, sortBy, mediaType]);
 
   async function handleSearch() {
     if (!query.trim()) return;
+
     setLoading(true);
     setError(null);
+
     try {
-      const response = await searchAll(query.trim(), 12);
+      const response = await searchAll(query.trim(), 12, {
+        ordering: sortBy,
+        media_type: mediaType,
+      });
       setData(response);
-      window.history.replaceState({}, "", `/search?q=${encodeURIComponent(query.trim())}`);
+
+      const qs = new URLSearchParams();
+      qs.set("q", query.trim());
+      if (sortBy !== "relevance") qs.set("sort", sortBy);
+      if (mediaType !== "all") qs.set("media_type", mediaType);
+
+      window.history.replaceState({}, "", `/search?${qs.toString()}`);
     } catch {
       setError("Search failed. Please try again.");
     } finally {
@@ -83,7 +100,31 @@ export function SearchPageClient() {
           {loading ? "Searching..." : "Search"}
         </button>
       </div>
-            {loading ? (
+
+      <div className="mt-6">
+        <ResultsToolbar
+          sortValue={sortBy}
+          onSortChange={setSortBy}
+          sortOptions={[
+            { label: "Relevance", value: "relevance" },
+            { label: "Rating", value: "vote_average" },
+            { label: "Vote count", value: "vote_count" },
+            { label: "Popularity", value: "popularity" },
+            { label: "Newest", value: "newest" },
+          ]}
+          mediaValue={mediaType}
+          onMediaChange={setMediaType}
+          mediaOptions={[
+            { label: "All", value: "all" },
+            { label: "Movies", value: "movie" },
+            { label: "TV Shows", value: "tv" },
+          ]}
+        />
+      </div>
+
+      {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
+
+      {loading ? (
         <div className="mt-8 space-y-10">
           <section>
             <div className="mb-3">
@@ -112,7 +153,6 @@ export function SearchPageClient() {
           </section>
         </div>
       ) : null}
-      {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
 
       {!loading && data ? (
         data.titles.length === 0 && data.people.length === 0 ? (
@@ -126,6 +166,6 @@ export function SearchPageClient() {
           <UnifiedSearchResults data={data} />
         )
       ) : null}
-          </div>
+    </div>
   );
 }
