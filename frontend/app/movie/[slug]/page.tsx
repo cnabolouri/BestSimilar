@@ -1,0 +1,12 @@
+import { getSimilarTitles, getTitleDetail } from "@/services/titles";
+import { TitleDetailPage } from "@/components/title/title-detail-page";
+
+export default async function MovieDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const [title, similar] = await Promise.all([
+    getTitleDetail(slug),
+    getSimilarTitles(slug, 12),
+  ]);
+
+  return <TitleDetailPage title={title} similar={similar.results} />;
+}
