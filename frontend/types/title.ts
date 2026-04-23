@@ -29,6 +29,23 @@ export type TitleCredit = {
   person_profile_url: string;
 };
 
+export type TitleWatchProvider = {
+  country_code: string;
+  provider_type: string;
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+  display_priority: number;
+};
+
+export type TitleNewsItem = {
+  source_name: string;
+  headline: string;
+  summary: string;
+  url: string;
+  published_at: string | null;
+};
+
 export type TitleDetail = {
   id: number;
   tmdb_id: number;
@@ -48,6 +65,7 @@ export type TitleDetail = {
   last_air_date: string | null;
   runtime_minutes: number | null;
   episode_run_times: number[];
+  episode_duration_display?: string | null;
   seasons_count: number | null;
   episodes_count: number | null;
   age_rating: string;
@@ -59,6 +77,8 @@ export type TitleDetail = {
   keywords: TitleKeyword[];
   themes: TitleTheme[];
   credits: TitleCredit[];
+  watch_providers: TitleWatchProvider[];
+  news_items: TitleNewsItem[];
   created_at: string;
   updated_at: string;
 };
