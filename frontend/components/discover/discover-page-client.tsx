@@ -5,6 +5,9 @@ import { discoverTitles } from "@/services/discover";
 import type { DiscoverResponse } from "@/types/discover";
 import { DiscoverResultsGrid } from "@/components/discover/discover-results-grid";
 
+import { DiscoverResultCardSkeleton } from "@/components/cards/discover-result-card-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+
 export function DiscoverPageClient() {
   const [prompt, setPrompt] = useState("");
   const [mediaType, setMediaType] = useState<"movie" | "tv">("tv");
@@ -77,9 +80,32 @@ export function DiscoverPageClient() {
           </button>
         </div>
       </div>
-
+      {loading ? (
+        <div className="mt-8">
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Results
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <DiscoverResultCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      ) : null}
       {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
-      {data ? <DiscoverResultsGrid data={data} /> : null}
-    </div>
+      {!loading && data ? (
+        data.results.length > 0 ? (
+          <DiscoverResultsGrid data={data} />
+        ) : (
+          <div className="mt-8">
+            <EmptyState
+              title="No close matches found"
+              description="Try describing genre, tone, pacing, setting, or emotional feel."
+            />
+          </div>
+        )
+      ) : null}    </div>
   );
 }

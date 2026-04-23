@@ -6,6 +6,10 @@ import { searchAll } from "@/services/search";
 import type { UnifiedSearchResponse } from "@/types/search";
 import { UnifiedSearchResults } from "@/components/search/unified-search-results";
 
+import { SearchTitleCardSkeleton } from "@/components/cards/search-title-card-skeleton";
+import { SearchPersonCardSkeleton } from "@/components/cards/search-person-card-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+
 export function SearchPageClient() {
   const params = useSearchParams();
   const initialQ = params.get("q") ?? "";
@@ -79,10 +83,49 @@ export function SearchPageClient() {
           {loading ? "Searching..." : "Search"}
         </button>
       </div>
+            {loading ? (
+        <div className="mt-8 space-y-10">
+          <section>
+            <div className="mb-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Titles
+              </h2>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SearchTitleCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
 
+          <section>
+            <div className="mb-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                People
+              </h2>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SearchPersonCardSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
       {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
 
-      {data ? <UnifiedSearchResults data={data} /> : null}
-    </div>
+      {!loading && data ? (
+        data.titles.length === 0 && data.people.length === 0 ? (
+          <div className="mt-8">
+            <EmptyState
+              title="No matches found"
+              description={`We couldn’t find results for “${data.query}”. Try a broader search.`}
+            />
+          </div>
+        ) : (
+          <UnifiedSearchResults data={data} />
+        )
+      ) : null}
+          </div>
   );
 }

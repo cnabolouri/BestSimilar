@@ -1,70 +1,7 @@
-// "use client";
-
-// import { useState } from "react";
-
-// const tabs = [
-//   { id: "title", label: "Title Search" },
-//   { id: "discover", label: "AI Discover" },
-// ] as const;
-
-// export function SearchDiscoverTabs() {
-//   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["id"]>("discover");
-
-//   return (
-//     <div className="w-full">
-//       <div className="inline-flex rounded-full border border-border bg-card p-1">
-//         {tabs.map((tab) => {
-//           const isActive = activeTab === tab.id;
-//           return (
-//             <button
-//               key={tab.id}
-//               type="button"
-//               onClick={() => setActiveTab(tab.id)}
-//               className={[
-//                 "rounded-full px-4 py-2 text-sm font-medium transition",
-//                 isActive
-//                   ? "bg-accent text-accent-foreground"
-//                   : "text-muted-foreground hover:text-foreground",
-//               ].join(" ")}
-//             >
-//               {tab.label}
-//             </button>
-//           );
-//         })}
-//       </div>
-
-//       <div className="mt-5 rounded-[2rem] border border-border bg-card p-3 shadow-sm">
-//         {activeTab === "discover" ? (
-//           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-//             <textarea
-//               rows={3}
-//               placeholder="Describe the kind of movie or show you want..."
-//               className="min-h-[92px] w-full resize-none rounded-2xl border border-transparent bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
-//             />
-//             <button className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90">
-//               Discover
-//             </button>
-//           </div>
-//         ) : (
-//           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-//             <input
-//               type="text"
-//               placeholder="Search by title, movie, show, or person..."
-//               className="h-14 w-full rounded-2xl border border-transparent bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground"
-//             />
-//             <button className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90">
-//               Search
-//             </button>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { searchAll } from "@/services/search";
 import { discoverTitles } from "@/services/discover";
 import type { UnifiedSearchResponse } from "@/types/search";
@@ -72,14 +9,23 @@ import type { DiscoverResponse } from "@/types/discover";
 import { SearchTitleCard } from "@/components/cards/search-title-card";
 import { SearchPersonCard } from "@/components/cards/search-person-card";
 import { DiscoverResultCard } from "@/components/cards/discover-result-card";
+import { PromptChipRow } from "@/components/home/prompt-chip-row";
+
+import { SearchTitleCardSkeleton } from "@/components/cards/search-title-card-skeleton";
+import { SearchPersonCardSkeleton } from "@/components/cards/search-person-card-skeleton";
+import { DiscoverResultCardSkeleton } from "@/components/cards/discover-result-card-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+
 
 const tabs = [
   { id: "title", label: "Title Search" },
   { id: "discover", label: "AI Discover" },
 ] as const;
 
+type TabId = (typeof tabs)[number]["id"];
+
 export function SearchDiscoverTabs() {
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["id"]>("discover");
+  const [activeTab, setActiveTab] = useState<TabId>("discover");
   const [searchInput, setSearchInput] = useState("");
   const [discoverInput, setDiscoverInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -87,10 +33,14 @@ export function SearchDiscoverTabs() {
   const [discoverResults, setDiscoverResults] = useState<DiscoverResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const discoverTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   async function handleSearch() {
     if (!searchInput.trim()) return;
+
     setLoading(true);
     setError(null);
+
     try {
       const data = await searchAll(searchInput.trim(), 6);
       setSearchResults(data);
@@ -104,11 +54,15 @@ export function SearchDiscoverTabs() {
 
   async function handleDiscover() {
     if (!discoverInput.trim()) return;
+
     setLoading(true);
     setError(null);
+
     try {
       const data = await discoverTitles({
         prompt: discoverInput.trim(),
+        media_type: "tv",
+        limit: 8,
       });
       setDiscoverResults(data);
       setSearchResults(null);
@@ -119,93 +73,272 @@ export function SearchDiscoverTabs() {
     }
   }
 
+  function handlePromptSelect(prompt: string) {
+    setActiveTab("discover");
+    setDiscoverInput(prompt);
+    setSearchResults(null);
+    setError(null);
+
+    requestAnimationFrame(() => {
+      discoverTextareaRef.current?.focus();
+    });
+  }
+
   return (
     <div className="w-full">
       <div className="inline-flex rounded-full border border-border bg-card p-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={[
-                "rounded-full px-4 py-2 text-sm font-medium transition",
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              ].join(" ")}
+              className="relative rounded-full px-4 py-2 text-sm font-medium"
             >
-              {tab.label}
+              {isActive ? (
+                <motion.span
+                  layoutId="simcine-tab-pill"
+                  className="absolute inset-0 rounded-full bg-accent"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              ) : null}
+
+              <span
+                className={[
+                  "relative z-10 transition-colors",
+                  isActive ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+              >
+                {tab.label}
+              </span>
             </button>
           );
         })}
       </div>
 
       <div className="mt-5 rounded-[2rem] border border-border bg-card p-3 shadow-sm">
-        {activeTab === "discover" ? (
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <textarea
-              rows={3}
-              placeholder="Describe the kind of movie or show you want..."
-              value={discoverInput}
-              onChange={(e) => setDiscoverInput(e.target.value)}
-              className="min-h-[92px] w-full resize-none rounded-2xl border border-transparent bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <button 
-              onClick={handleDiscover}
-              disabled={loading}
-              className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
+        <AnimatePresence mode="wait" initial={false}>
+          {activeTab === "discover" ? (
+            <motion.div
+              key="discover"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3 md:flex-row md:items-center"
             >
-              {loading ? "Loading..." : "Discover"}
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <input
-              type="text"
-              placeholder="Search by title, movie, show, or person..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-14 w-full rounded-2xl border border-transparent bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <button 
-              onClick={handleSearch}
-              disabled={loading}
-              className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-50"
+              <textarea
+                ref={discoverTextareaRef}
+                rows={3}
+                value={discoverInput}
+                onChange={(e) => setDiscoverInput(e.target.value)}
+                placeholder="Describe the kind of movie or show you want..."
+                className="min-h-[92px] w-full resize-none rounded-2xl border border-transparent bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
+              />
+
+              <motion.button
+                type="button"
+                onClick={handleDiscover}
+                whileHover={{ y: -1, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={loading}
+                className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-60"
+              >
+                {loading ? "Discovering..." : "Discover"}
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="title"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3 md:flex-row md:items-center"
             >
-              {loading ? "Loading..." : "Search"}
-            </button>
-          </div>
-        )}
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by title, movie, show, or person..."
+                className="h-14 w-full rounded-2xl border border-transparent bg-transparent px-4 text-sm outline-none placeholder:text-muted-foreground"
+              />
+
+              <motion.button
+                type="button"
+                onClick={handleSearch}
+                whileHover={{ y: -1, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={loading}
+                className="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-accent px-5 text-sm font-semibold text-accent-foreground transition hover:opacity-90 disabled:opacity-60"
+              >
+                {loading ? "Searching..." : "Search"}
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {error && <div className="mt-4 rounded-lg bg-red-100 p-3 text-red-800">{error}</div>}
-      
-      {searchResults && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">Search Results</h3>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {searchResults.titles?.map((title) => (
-              <SearchTitleCard key={title.id} item={title} />
-            ))}
-            {searchResults.people?.map((person) => (
-              <SearchPersonCard key={person.id} item={person} />
-            ))}
-          </div>
-        </div>
-      )}
+      <PromptChipRow onSelectPrompt={handlePromptSelect} />
 
-      {discoverResults && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-4">Discover Results</h3>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {discoverResults.results?.map((result) => (
-              <DiscoverResultCard key={result.id} item={result} />
+            {error ? (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
+        >
+          {error}
+        </motion.div>
+      ) : null}
+
+      {loading && activeTab === "title" ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-8 space-y-8"
+        >
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Titles
+              </h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SearchTitleCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                People
+              </h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SearchPersonCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
+
+      {loading && activeTab === "discover" ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-8"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Discover results
+            </h3>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <DiscoverResultCardSkeleton key={i} />
             ))}
           </div>
-        </div>
-      )}
+        </motion.div>
+      ) : null}
+
+      <AnimatePresence mode="wait">
+        {!loading && searchResults ? (
+          <motion.div
+            key="search-results"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22 }}
+            className="mt-8 space-y-8"
+          >
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Titles
+                </h3>
+                <span className="text-xs text-muted-foreground">
+                  {searchResults.titles_count} results
+                </span>
+              </div>
+
+              {searchResults.titles.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {searchResults.titles.map((item) => (
+                    <SearchTitleCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No title matches found"
+                  description="Try another title, a broader phrase, or check the spelling."
+                />
+              )}
+            </div>
+
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  People
+                </h3>
+                <span className="text-xs text-muted-foreground">
+                  {searchResults.people_count} results
+                </span>
+              </div>
+
+              {searchResults.people.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {searchResults.people.map((item) => (
+                    <SearchPersonCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No people found"
+                  description="Try another name or search by a title instead."
+                />
+              )}
+            </div>
+          </motion.div>
+        ) : null}
+
+        {!loading && discoverResults ? (
+          <motion.div
+            key="discover-results"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22 }}
+            className="mt-8"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Discover results
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {discoverResults.count} results
+              </span>
+            </div>
+
+            {discoverResults.results.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {discoverResults.results.map((item) => (
+                  <DiscoverResultCard key={item.id} item={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No close matches found"
+                description="Try describing genre, tone, pacing, setting, or emotional feel."
+              />
+            )}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

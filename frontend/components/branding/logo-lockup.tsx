@@ -1,17 +1,19 @@
+import Link from "next/link";
 import { LogoMark } from "@/components/branding/logo-mark";
 
 export function LogoLockup() {
   return (
-    <div className="flex items-center gap-3">
+    <Link href="/" className="flex items-center gap-3">
       <LogoMark className="h-9 w-9" />
       <div className="flex flex-col leading-none">
         <span className="text-lg font-semibold tracking-tight">Simcine</span>
-        <span className="mt-1 text-xs text-muted-foreground">Find what feels similar.</span>
+        <span className="mt-1 text-xs text-muted-foreground">
+          Find what feels similar.
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }
-
 // "use client";
 
 // import Image from "next/image";

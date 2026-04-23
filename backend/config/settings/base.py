@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_celery_results",
     "pgvector.django",
-
+    "corsheaders",
     "apps.accounts",
     "apps.catalog",
     "apps.people",
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -113,3 +114,10 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original"
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
