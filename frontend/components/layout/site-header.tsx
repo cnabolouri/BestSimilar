@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LogoLockup } from "@/components/branding/logo-lockup";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { HeaderSearch } from "@/components/layout/header-search";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -27,14 +27,14 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+        <HeaderSearch />
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
           <Link
             href="/login"
             className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
           >
-            Sign in
+            LOGIN/SIGNUP
           </Link>
         </div>
       </div>
