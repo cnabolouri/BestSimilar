@@ -88,6 +88,8 @@ class TitleWatchProvider(TimeStampedModel):
     provider_id = models.PositiveIntegerField()
     provider_name = models.CharField(max_length=255)
     logo_path = models.CharField(max_length=255, blank=True)
+    provider_link = models.URLField(blank=True)
+    affiliate_url = models.URLField(blank=True, null=True)  # For future monetization
     display_priority = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -101,7 +103,7 @@ class TitleWatchProvider(TimeStampedModel):
     
 class TitleNewsItem(TimeStampedModel):
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="news_items")
-    source_name = models.CharField(max_length=255)
+    source_name = models.CharField(max_length=200)
     headline = models.CharField(max_length=500)
     summary = models.TextField(blank=True)
     url = models.URLField()

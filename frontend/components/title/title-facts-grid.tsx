@@ -17,18 +17,27 @@ export function TitleFactsGrid({ title }: { title: TitleDetail }) {
             : formatDate(title.first_air_date)
         }
       />
+
       {title.media_type === "tv" ? (
         <FactCard label="Last air date" value={formatDate(title.last_air_date)} />
       ) : null}
-      {typeof title.runtime_minutes === "number" && title.runtime_minutes > 0 ? (
+
+      {title.media_type === "movie" && typeof title.runtime_minutes === "number" && title.runtime_minutes > 0 ? (
         <FactCard label="Runtime" value={`${title.runtime_minutes} min`} />
       ) : null}
+
+      {title.media_type === "tv" && title.episode_duration_display ? (
+        <FactCard label="Episode length" value={title.episode_duration_display} />
+      ) : null}
+
       {typeof title.seasons_count === "number" && title.seasons_count > 0 ? (
         <FactCard label="Seasons" value={String(title.seasons_count)} />
       ) : null}
+
       {typeof title.episodes_count === "number" && title.episodes_count > 0 ? (
         <FactCard label="Episodes" value={String(title.episodes_count)} />
       ) : null}
+
       <FactCard label="Language" value={title.original_language || "—"} />
       <FactCard label="Status" value={title.status || "—"} />
       <FactCard label="TMDB rating" value={`${title.vote_average} / 10`} />

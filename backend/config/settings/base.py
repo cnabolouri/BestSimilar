@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -121,3 +122,18 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "")
+
+CELERY_BEAT_SCHEDULE = {
+    "refresh-title-news-every-12-hours": {
+        "task": "apps.ingestion.tasks.refresh_title_news_task",
+        "schedule": crontab(minute=0, hour="*/12"),
+        "args": [25, None],
+    },
+    "refresh-person-news-every-12-hours": {
+    "task": "apps.ingestion.tasks.refresh_person_news_task",
+    "schedule": crontab(minute=15, hour="*/12"),
+    "args": [25],
+    },
+}

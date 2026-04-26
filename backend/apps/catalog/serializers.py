@@ -45,9 +45,10 @@ class TitleWatchProviderSerializer(serializers.ModelSerializer):
             "provider_id",
             "provider_name",
             "logo_path",
+            "provider_link",
+            "affiliate_url",
             "display_priority",
         ]
-
 class TitleCreditSerializer(serializers.ModelSerializer):
     person_id = serializers.IntegerField(source="person.id", read_only=True)
     person_name = serializers.CharField(source="person.name", read_only=True)

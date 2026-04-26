@@ -24,3 +24,17 @@ class Person(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+    
+class PersonNewsItem(TimeStampedModel):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="news_items")
+    source_name = models.CharField(max_length=255)
+    headline = models.CharField(max_length=500)
+    summary = models.TextField(blank=True)
+    url = models.URLField()
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-published_at", "-created_at"]
+
+    def __str__(self):
+        return f"{self.person.name} - {self.headline}"

@@ -152,6 +152,8 @@ def attach_watch_providers(title: Title, data: dict) -> None:
         TitleWatchProvider.objects.filter(title=title, country_code="US").delete()
         return
 
+    country_link = us_data.get("link", "") or ""
+
     TitleWatchProvider.objects.filter(title=title, country_code="US").delete()
 
     for provider_type in ["flatrate", "rent", "buy", "free"]:
@@ -164,5 +166,6 @@ def attach_watch_providers(title: Title, data: dict) -> None:
                 provider_id=provider["provider_id"],
                 provider_name=provider["provider_name"],
                 logo_path=provider.get("logo_path", "") or "",
+                provider_link=country_link,
                 display_priority=provider.get("display_priority", 0) or 0,
             )

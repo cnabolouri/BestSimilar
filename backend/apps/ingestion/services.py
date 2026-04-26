@@ -35,6 +35,9 @@ class TMDBClient:
     def get_person_details(self, tmdb_id: int) -> dict:
         return self.get(f"/person/{tmdb_id}")
 
+    def popular_people(self, page: int = 1) -> dict:
+        return self.get("/person/popular", params={"page": page})
+
     def discover_movies(self, page: int = 1) -> dict:
         return self.get("/discover/movie", params={"page": page, "sort_by": "popularity.desc"})
 

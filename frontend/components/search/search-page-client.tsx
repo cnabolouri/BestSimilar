@@ -13,6 +13,7 @@ import { ResultsToolbar } from "@/components/results/results-toolbar";
 export function SearchPageClient() {
   const params = useSearchParams();
   const initialQ = params.get("q") ?? "";
+  const initialType = params.get("type") ?? "all";
 
   const [query, setQuery] = useState(initialQ);
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ export function SearchPageClient() {
 
   const [sortBy, setSortBy] = useState("relevance");
   const [mediaType, setMediaType] = useState("all");
+  const [searchType, setSearchType] = useState(initialType);
 
   useEffect(() => {
     if (!initialQ.trim()) return;
@@ -67,6 +69,7 @@ export function SearchPageClient() {
       qs.set("q", query.trim());
       if (sortBy !== "relevance") qs.set("sort", sortBy);
       if (mediaType !== "all") qs.set("media_type", mediaType);
+      if (searchType !== "all") qs.set("type", searchType);
 
       window.history.replaceState({}, "", `/search?${qs.toString()}`);
     } catch {
@@ -99,6 +102,32 @@ export function SearchPageClient() {
         >
           {loading ? "Searching..." : "Search"}
         </button>
+      </div>
+
+      <div className="mt-5 inline-flex rounded-full border border-border bg-card p-1">
+        {[
+          { label: "All", value: "all" },
+          { label: "Titles", value: "titles" },
+          { label: "People", value: "people" },
+        ].map((item) => {
+          const active = searchType === item.value;
+
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setSearchType(item.value)}
+              className={[
+                "rounded-full px-4 py-2 text-sm font-medium transition",
+                active
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              ].join(" ")}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-6">
@@ -163,7 +192,7 @@ export function SearchPageClient() {
             />
           </div>
         ) : (
-          <UnifiedSearchResults data={data} />
+          <UnifiedSearchResults data={data} searchType={searchType} />
         )
       ) : null}
     </div>

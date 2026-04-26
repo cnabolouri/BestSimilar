@@ -1,8 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from apps.people.views import PersonListAPIView, PersonDetailAPIView
+from apps.people.views import PersonViewSet
+
+router = DefaultRouter()
+router.register(r"", PersonViewSet, basename="person")
 
 urlpatterns = [
-    path("", PersonListAPIView.as_view(), name="person-list"),
-    path("<slug:slug>/", PersonDetailAPIView.as_view(), name="person-detail"),
+    path("", include(router.urls)),
 ]

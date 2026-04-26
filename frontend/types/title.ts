@@ -35,6 +35,8 @@ export type TitleWatchProvider = {
   provider_id: number;
   provider_name: string;
   logo_path: string;
+  provider_link?: string | null;
+  affiliate_url?: string | null;
   display_priority: number;
 };
 

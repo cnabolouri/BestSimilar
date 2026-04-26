@@ -5,6 +5,7 @@ import { TitleSimilarGrid } from "@/components/title/title-similar-grid";
 import { TitleFactsGrid } from "@/components/title/title-facts-grid";
 import { TitleWatchProviders } from "@/components/title/title-watch-providers";
 import { TitleNewsSection } from "@/components/title/title-news-section";
+import { TitleKeyPeople } from "@/components/title/title-key-people";
 
 export function TitleDetailPage({
   title,
@@ -32,7 +33,9 @@ export function TitleDetailPage({
               <TitleFactsGrid title={title} />
             </div>
           </section>
-
+          <section>
+            <TitleKeyPeople credits={title.credits} />
+          </section>
           {(title.keywords.length > 0 || title.themes.length > 0 || title.genres.length > 0) ? (
             <section>
               <h2 className="text-lg font-semibold">Why it stands out</h2>
@@ -93,8 +96,8 @@ export function TitleDetailPage({
             </section>
           ) : null}
 
-          <TitleWatchProviders />
-          <TitleNewsSection />
+          <TitleWatchProviders providers={title.watch_providers} />
+          <TitleNewsSection newsItems={title.news_items} />
         </div>
 
         <div>
