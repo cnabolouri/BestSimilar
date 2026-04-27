@@ -25,34 +25,28 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "slug"
 
     def get_queryset(self):
-        queryset = (
+        return (
             Person.objects.all()
             .prefetch_related(
                 "news_items",
                 "credits__title__genres",
             )
+            .order_by("-popularity", "name")
         )
 
-        q = self.request.query_params.get("q")
-        department = self.request.query_params.get("department")
+    @action(detail=True, methods=["get"], url_path="related")
+    def related(self, request, slug=None):
+        person = self.get_object()
+        title_ids = person.credits.values_list("title_id", flat=True)
 
-        if department:
-            queryset = queryset.filter(known_for_department__iexact=department)
+        related_people = (
+            Person.objects.filter(credits__title_id__in=title_ids)
+            .exclude(id=person.id)
+            .annotate(shared_titles_count=Count("credits__title_id", distinct=True))
+            .order_by("-shared_titles_count", "-popularity")[:12]
+        )
 
-        if q:
-            queryset = queryset.filter(name__icontains=q).annotate(
-                search_rank=Case(
-                    When(name__iexact=q, then=0),
-                    When(name__istartswith=q, then=1),
-                    When(name__icontains=q, then=2),
-                    default=3,
-                    output_field=IntegerField(),
-                )
-            ).order_by("search_rank", "-popularity", "name")
-        else:
-            queryset = queryset.order_by("-popularity", "name")
-
-        return queryset.distinct()
+        return Response(RelatedPersonSerializer(related_people, many=True).data)
 
 class PersonListAPIView(ListAPIView):
     serializer_class = PersonListSerializer

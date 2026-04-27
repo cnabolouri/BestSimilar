@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { TitleDetail } from "@/types/title";
 import { tmdbPosterUrl, tmdbBackdropUrl } from "@/lib/images";
+import { TitleActions } from "@/components/title/title-actions";
 
 export function TitleHero({ title }: { title: TitleDetail }) {
   const year =
@@ -70,12 +71,7 @@ export function TitleHero({ title }: { title: TitleDetail }) {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <button className="rounded-2xl bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground">
-                Add to watchlist
-              </button>
-              <button className="rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground">
-                Add to favorites
-              </button>
+              <TitleActions titleSlug={title.slug} />
             </div>
           </div>
         </div>

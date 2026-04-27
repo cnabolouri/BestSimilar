@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from apps.catalog.models import TimeStampedModel, Title
 from apps.people.models import Person
-
+User = settings.AUTH_USER_MODEL
 
 class FavoriteTitle(TimeStampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="favorite_titles")
@@ -38,3 +38,15 @@ class WatchlistItem(TimeStampedModel):
 
     class Meta:
         unique_together = ("user", "title")
+
+class WatchedTitle(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watched_titles")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="watched_by")
+    watched_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "title")
+        ordering = ["-watched_at"]
+
+    def __str__(self):
+        return f"{self.user} watched {self.title}"

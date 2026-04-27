@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function HeaderSearch() {
+
+export function HeaderSearch({ onSearch }: { onSearch?: () => void }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -15,12 +16,13 @@ export function HeaderSearch() {
 
     router.push(`/search?q=${encodeURIComponent(trimmed)}&type=all`);
     setQuery("");
+    onSearch?.();
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="hidden w-full max-w-sm items-center rounded-full border border-border bg-card px-3 py-1.5 lg:flex"
+      className="flex w-full items-center rounded-full border border-border bg-card px-3 py-1.5"
     >
       <input
         value={query}

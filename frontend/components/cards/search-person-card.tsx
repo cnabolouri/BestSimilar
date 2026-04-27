@@ -3,6 +3,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { SearchPerson } from "@/types/search";
 import { tmdbProfileUrl } from "@/lib/images";
+import { PersonQuickActions } from "@/components/actions/person-quick-actions";
 
 export function SearchPersonCard({ item }: { item: SearchPerson }) {
   const profileUrl = tmdbProfileUrl(item.profile_url);
@@ -13,7 +14,9 @@ export function SearchPersonCard({ item }: { item: SearchPerson }) {
         href={`/person/${item.slug}`}
         className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition-all duration-200 hover:border-accent/60 hover:shadow-md"
       >
+        <PersonQuickActions personSlug={item.slug} />
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-background">
+          {/* <PersonQuickActions personSlug={item.slug} /> */}
           {profileUrl ? (
             <Image
               src={profileUrl}

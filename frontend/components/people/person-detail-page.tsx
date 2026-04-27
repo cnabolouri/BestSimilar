@@ -8,6 +8,7 @@ import { PersonCareerScore } from "@/components/people/person-career-score";
 import { PersonKnownForSection } from "@/components/people/person-known-for-section";
 import { RelatedPeopleSection } from "@/components/people/related-people-section";
 import { PersonGenreSummary } from "@/components/people/person-genre-summary";
+import { PersonActions } from "@/components/people/person-actions";
 
 export function PersonDetailPage({
   person,
@@ -77,10 +78,10 @@ export function PersonDetailPage({
                 {person.biography || "Biography information is not available yet."}
               </p>
             </div>
+            <PersonActions personSlug={person.slug} />
           </div>
         </div>
       </section>
-
       <PersonKnownForSection credits={person.credits} />
 
       <section className="mt-10 grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">

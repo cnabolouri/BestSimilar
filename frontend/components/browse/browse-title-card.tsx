@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { BrowseTitle } from "@/services/titles";
 import { tmdbPosterUrl } from "@/lib/images";
+import { TitleQuickActions } from "@/components/actions/title-quick-actions";
 
 export function BrowseTitleCard({ title }: { title: BrowseTitle }) {
   const href = title.media_type === "movie" ? `/movie/${title.slug}` : `/tv/${title.slug}`;
@@ -18,6 +19,7 @@ export function BrowseTitleCard({ title }: { title: BrowseTitle }) {
       className="group rounded-3xl border border-border bg-card p-3 transition hover:border-accent/60 hover:shadow-sm"
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-border bg-background">
+        <TitleQuickActions titleSlug={title.slug} />
         {posterUrl ? (
           <Image
             src={posterUrl}

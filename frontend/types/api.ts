@@ -4,3 +4,4 @@ export type PaginatedResponse<T> = {
   previous: string | null;
   results: T[];
 };
+

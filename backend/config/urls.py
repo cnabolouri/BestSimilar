@@ -11,4 +11,6 @@ urlpatterns = [
     path("api/v1/interactions/", include("apps.interactions.urls")),
     path("api/v1/comments/", include("apps.comments.urls")),
     path("api/v1/analytics/", include("apps.analytics.urls")),
+    path("api/v1/auth/", include("apps.accounts.urls")),
+    path("api/v1/interactions/", include("apps.interactions.urls")),
 ]

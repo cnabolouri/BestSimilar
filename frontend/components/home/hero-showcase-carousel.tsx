@@ -304,7 +304,10 @@ function TabletCarousel({
                     <span className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground">
                       {activeItem.score}
                     </span>
-                    <span className="text-sm font-medium text-foreground">Tap anywhere to open</span>
+                    {/* <span className="text-sm font-medium text-foreground">Tap anywhere to open</span> */}
+                    <span className="inline-flex items-center rounded-full border border-border bg-background/70 px-4 py-2 text-sm font-medium text-foreground backdrop-blur">
+                      View title
+                    </span>
                   </div>
                 </div>
               </div>
