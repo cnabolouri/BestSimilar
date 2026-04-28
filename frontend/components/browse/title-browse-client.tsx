@@ -18,6 +18,12 @@ export function TitleBrowseClient({
   const [ordering, setOrdering] = useState("popularity");
   const [minRating, setMinRating] = useState("");
   const [minVotes, setMinVotes] = useState("");
+  const [genre, setGenre] = useState("");
+  const [country, setCountry] = useState("");
+  const [year, setYear] = useState("");
+  const [language, setLanguage] = useState("");
+  const [ageRating, setAgeRating] = useState("");
+  const [provider, setProvider] = useState("");
   const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
@@ -37,6 +43,12 @@ export function TitleBrowseClient({
         ordering,
         min_rating: minRating,
         min_votes: minVotes,
+        genre,
+        country,
+        year,
+        language,
+        age_rating: ageRating,
+        provider,
         page,
       });
 
@@ -54,12 +66,44 @@ export function TitleBrowseClient({
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mediaType, ordering, minRating, minVotes, page]);
+  }, [
+    mediaType,
+    ordering,
+    minRating,
+    minVotes,
+    genre,
+    country,
+    year,
+    language,
+    ageRating,
+    provider,
+    page,
+  ]);
 
   function resetPageAndSet<T>(setter: (value: T) => void, value: T) {
     setPage(1);
     setter(value);
   }
+
+  const ageRatingOptions: [string, string][] =
+    mediaType === "movie"
+      ? [
+          ["", "Any rating"],
+          ["G", "G"],
+          ["PG", "PG"],
+          ["PG-13", "PG-13"],
+          ["R", "R"],
+          ["NC-17", "NC-17"],
+        ]
+      : [
+          ["", "Any rating"],
+          ["TV-Y", "TV-Y"],
+          ["TV-Y7", "TV-Y7"],
+          ["TV-G", "TV-G"],
+          ["TV-PG", "TV-PG"],
+          ["TV-14", "TV-14"],
+          ["TV-MA", "TV-MA"],
+        ];
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-8 lg:px-10">
@@ -75,55 +119,157 @@ export function TitleBrowseClient({
       </div>
 
       <div className="rounded-[2rem] border border-border bg-card p-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Sort by
-            </label>
-            <select
-              value={ordering}
-              onChange={(e) => resetPageAndSet(setOrdering, e.target.value)}
-              className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none"
-            >
-              <option value="popularity">Most popular</option>
-              <option value="vote_average">Highest rated</option>
-              <option value="vote_count">Most voted</option>
-              <option value="newest">Newest</option>
-            </select>
-          </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <FilterSelect
+            label="Sort by"
+            value={ordering}
+            onChange={(value) => resetPageAndSet(setOrdering, value)}
+            options={[
+              ["popularity", "Most popular"],
+              ["vote_average", "Highest rated"],
+              ["vote_count", "Most voted"],
+              ["newest", "Newest"],
+              ["oldest", "Oldest"],
+            ]}
+          />
 
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Minimum rating
-            </label>
-            <select
-              value={minRating}
-              onChange={(e) => resetPageAndSet(setMinRating, e.target.value)}
-              className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none"
-            >
-              <option value="">Any rating</option>
-              <option value="6">6+</option>
-              <option value="7">7+</option>
-              <option value="8">8+</option>
-              <option value="9">9+</option>
-            </select>
-          </div>
+          <FilterSelect
+            label="Genre"
+            value={genre}
+            onChange={(value) => resetPageAndSet(setGenre, value)}
+            options={[
+              ["", "Any genre"],
+              ["Action", "Action"],
+              ["Adventure", "Adventure"],
+              ["Animation", "Animation"],
+              ["Comedy", "Comedy"],
+              ["Crime", "Crime"],
+              ["Documentary", "Documentary"],
+              ["Drama", "Drama"],
+              ["Family", "Family"],
+              ["Fantasy", "Fantasy"],
+              ["Horror", "Horror"],
+              ["Mystery", "Mystery"],
+              ["Romance", "Romance"],
+              ["Science Fiction", "Science Fiction"],
+              ["Sci-Fi & Fantasy", "Sci-Fi & Fantasy"],
+              ["Thriller", "Thriller"],
+              ["War", "War"],
+              ["Western", "Western"],
+            ]}
+          />
 
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Minimum votes
-            </label>
-            <select
-              value={minVotes}
-              onChange={(e) => resetPageAndSet(setMinVotes, e.target.value)}
-              className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none"
+          <FilterSelect
+            label="Minimum rating"
+            value={minRating}
+            onChange={(value) => resetPageAndSet(setMinRating, value)}
+            options={[
+              ["", "Any rating"],
+              ["6", "6+"],
+              ["7", "7+"],
+              ["8", "8+"],
+              ["9", "9+"],
+            ]}
+          />
+
+          <FilterSelect
+            label="Minimum votes"
+            value={minVotes}
+            onChange={(value) => resetPageAndSet(setMinVotes, value)}
+            options={[
+              ["", "Any votes"],
+              ["100", "100+"],
+              ["500", "500+"],
+              ["1000", "1,000+"],
+              ["5000", "5,000+"],
+            ]}
+          />
+
+          <FilterInput
+            label="Year"
+            value={year}
+            onChange={(value) => resetPageAndSet(setYear, value)}
+            placeholder="year"
+          />
+
+          <FilterSelect
+            label="Country"
+            value={country}
+            onChange={(value) => resetPageAndSet(setCountry, value)}
+            options={[
+              ["", "Any country"],
+              ["US", "United States"],
+              ["GB", "United Kingdom"],
+              ["CA", "Canada"],
+              ["KR", "South Korea"],
+              ["JP", "Japan"],
+              ["FR", "France"],
+              ["DE", "Germany"],
+              ["IN", "India"],
+            ]}
+          />
+
+          <FilterSelect
+            label="Language"
+            value={language}
+            onChange={(value) => resetPageAndSet(setLanguage, value)}
+            options={[
+              ["", "Any language"],
+              ["en", "English"],
+              ["es", "Spanish"],
+              ["fr", "French"],
+              ["de", "German"],
+              ["ja", "Japanese"],
+              ["ko", "Korean"],
+              ["hi", "Hindi"],
+            ]}
+          />
+
+          <FilterSelect
+            label="Age rating"
+            value={ageRating}
+            onChange={(value) => resetPageAndSet(setAgeRating, value)}
+            options={ageRatingOptions}
+          />
+
+          <FilterSelect
+            label="Streaming service"
+            value={provider}
+            onChange={(value) => resetPageAndSet(setProvider, value)}
+            options={[
+              ["", "Any provider"],
+              ["Netflix", "Netflix"],
+              ["Hulu", "Hulu"],
+              ["Amazon", "Amazon"],
+              ["Prime Video", "Prime Video"],
+              ["Disney", "Disney+"],
+              ["HBO", "HBO Max"],
+              ["Max", "Max"],
+              ["Apple", "Apple TV"],
+              ["Paramount", "Paramount+"],
+              ["Peacock", "Peacock"],
+            ]}
+          />
+
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() => {
+                setPage(1);
+                setOrdering("popularity");
+                setMinRating("");
+                setMinVotes("");
+                setGenre("");
+                setCountry("");
+                setYear("");
+                setLanguage("");
+                setAgeRating("");
+                setProvider("");
+              }}
+              className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm font-semibold text-muted-foreground transition hover:border-accent/60 hover:text-foreground"
             >
-              <option value="">Any votes</option>
-              <option value="100">100+</option>
-              <option value="500">500+</option>
-              <option value="1000">1,000+</option>
-              <option value="5000">5,000+</option>
-            </select>
+              Clear filters
+            </button>
           </div>
         </div>
       </div>
@@ -160,6 +306,63 @@ export function TitleBrowseClient({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: [string, string][];
+}) {
+  return (
+    <div>
+      <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none"
+      >
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function FilterInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none"
+      />
     </div>
   );
 }

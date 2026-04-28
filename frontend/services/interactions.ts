@@ -41,6 +41,7 @@ export type TitleInteractionStatus = {
   in_watchlist: boolean;
   is_favorite: boolean;
   is_watched: boolean;
+  user_rating: number | null;
 };
 
 export async function getWatchHistory() {
@@ -84,4 +85,31 @@ export async function addFavoritePerson(personSlug: string) {
 
 export async function removeFavoritePerson(personSlug: string) {
   return apiDelete<void>(`/interactions/favorites/people/${personSlug}/`);
+}
+
+
+export type RatedTitleItem = SavedTitleItem & {
+  rating: number;
+  review: string;
+  rated_at: string;
+};
+
+export async function getRatings() {
+  return apiGet<RatedTitleItem[]>("/interactions/ratings/");
+}
+
+export async function rateTitle(input: {
+  titleSlug: string;
+  rating: number;
+  review?: string;
+}) {
+  return apiPost<RatedTitleItem>("/interactions/ratings/", {
+    title_slug: input.titleSlug,
+    rating: input.rating,
+    review: input.review ?? "",
+  });
+}
+
+export async function removeRating(titleSlug: string) {
+  return apiDelete<void>(`/interactions/ratings/${titleSlug}/`);
 }

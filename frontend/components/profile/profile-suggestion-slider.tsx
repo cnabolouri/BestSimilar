@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SimilarTitle } from "@/types/title";
 import { tmdbPosterUrl } from "@/lib/images";
+import { TitleQuickActions } from "@/components/actions/title-quick-actions";
 
 export function ProfileSuggestionSlider({
   title,
@@ -40,6 +41,7 @@ export function ProfileSuggestionSlider({
                 className="group min-w-[190px] snap-start rounded-3xl border border-border bg-card p-3 transition hover:border-accent/60 hover:shadow-sm"
               >
                 <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-border bg-background">
+                  <TitleQuickActions titleSlug={item.slug} />
                   {posterUrl ? (
                     <Image
                       src={posterUrl}

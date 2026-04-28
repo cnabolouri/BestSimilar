@@ -1,8 +1,12 @@
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.models import UserPrivacySettings, UserProfile
+from apps.accounts.authentication import CsrfExemptSessionAuthentication
 from apps.catalog.models import Title
 from apps.interactions.models import FavoriteTitle, WatchlistItem
 from apps.interactions.serializers import (
@@ -10,12 +14,150 @@ from apps.interactions.serializers import (
     TitleActionSerializer,
     WatchlistItemSerializer,
 )
-from apps.accounts.authentication import CsrfExemptSessionAuthentication
 from apps.people.models import Person
 from apps.interactions.models import FavoritePerson
 from apps.interactions.serializers import FavoritePersonSerializer, PersonActionSerializer
 from apps.interactions.models import WatchedTitle
 from apps.interactions.serializers import WatchedTitleSerializer
+from apps.interactions.models import TitleRating
+from apps.interactions.serializers import TitleRatingActionSerializer, TitleRatingSerializer
+
+
+def get_public_profile_user_or_404(username):
+    profile = get_object_or_404(
+        UserProfile.objects.select_related("user"),
+        username_slug=username,
+    )
+    return profile.user
+
+
+def assert_public_section_allowed(user, section):
+    privacy, _ = UserPrivacySettings.objects.get_or_create(user=user)
+    visibility_map = {
+        "watchlist": privacy.show_watchlist,
+        "favorites": privacy.show_favorite_titles or privacy.show_favorite_people,
+        "favorite_titles": privacy.show_favorite_titles,
+        "favorite_people": privacy.show_favorite_people,
+        "history": privacy.show_watch_history,
+        "ratings": privacy.show_ratings,
+        "reviews": privacy.show_reviews,
+    }
+
+    if not visibility_map.get(section, False):
+        raise PermissionDenied("This profile section is private.")
+
+
+class MyInteractionSummaryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        favorite_titles_count = FavoriteTitle.objects.filter(user=user).count()
+        favorite_people_count = FavoritePerson.objects.filter(user=user).count()
+        ratings = TitleRating.objects.filter(user=user)
+
+        return Response(
+            {
+                "watchlist_count": WatchlistItem.objects.filter(user=user).count(),
+                "favorites_count": favorite_titles_count + favorite_people_count,
+                "favorite_titles_count": favorite_titles_count,
+                "favorite_people_count": favorite_people_count,
+                "watched_count": WatchedTitle.objects.filter(user=user).count(),
+                "ratings_count": ratings.count(),
+                "reviews_count": ratings.exclude(review="").count(),
+            }
+        )
+
+
+class PublicProfileWatchlistAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        target_user = get_public_profile_user_or_404(username)
+        assert_public_section_allowed(target_user, "watchlist")
+        items = (
+            WatchlistItem.objects.filter(user=target_user)
+            .select_related("title")
+            .order_by("-created_at")
+        )
+        return Response(WatchlistItemSerializer(items, many=True).data)
+
+
+class PublicProfileFavoritesAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        target_user = get_public_profile_user_or_404(username)
+        assert_public_section_allowed(target_user, "favorites")
+        privacy, _ = UserPrivacySettings.objects.get_or_create(user=target_user)
+        title_favorites = FavoriteTitle.objects.none()
+        person_favorites = FavoritePerson.objects.none()
+
+        if privacy.show_favorite_titles:
+            title_favorites = (
+                FavoriteTitle.objects.filter(user=target_user)
+                .select_related("title")
+                .order_by("-created_at")
+            )
+
+        if privacy.show_favorite_people:
+            person_favorites = (
+                FavoritePerson.objects.filter(user=target_user)
+                .select_related("person")
+                .order_by("-created_at")
+            )
+
+        return Response(
+            {
+                "titles": FavoriteTitleSerializer(title_favorites, many=True).data,
+                "people": FavoritePersonSerializer(person_favorites, many=True).data,
+            }
+        )
+
+
+class PublicProfileHistoryAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        target_user = get_public_profile_user_or_404(username)
+        assert_public_section_allowed(target_user, "history")
+        history = (
+            WatchedTitle.objects.filter(user=target_user)
+            .select_related("title")
+            .order_by("-watched_at")
+        )
+        return Response(WatchedTitleSerializer(history, many=True).data)
+
+
+class PublicProfileRatingsAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        target_user = get_public_profile_user_or_404(username)
+        assert_public_section_allowed(target_user, "ratings")
+        ratings = (
+            TitleRating.objects.filter(user=target_user)
+            .select_related("title")
+            .order_by("-rated_at")
+        )
+        return Response(TitleRatingSerializer(ratings, many=True).data)
+
+
+class PublicProfileReviewsAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, username):
+        target_user = get_public_profile_user_or_404(username)
+        assert_public_section_allowed(target_user, "reviews")
+        reviews = (
+            TitleRating.objects.filter(user=target_user)
+            .exclude(review="")
+            .select_related("title")
+            .order_by("-rated_at")
+        )
+        return Response(TitleRatingSerializer(reviews, many=True).data)
+
 
 class WatchlistAPIView(APIView):
     authentication_classes = [CsrfExemptSessionAuthentication]
@@ -95,6 +237,11 @@ class TitleInteractionStatusAPIView(APIView):
                     user=request.user,
                     title__slug=title_slug,
                 ).exists(),
+                "user_rating": (
+                    TitleRating.objects.filter(user=request.user, title__slug=title_slug)
+                    .values_list("rating", flat=True)
+                    .first()
+                ),
             }
         )
         
@@ -154,4 +301,38 @@ class WatchedTitleRemoveAPIView(APIView):
 
     def delete(self, request, title_slug):
         WatchedTitle.objects.filter(user=request.user, title__slug=title_slug).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class TitleRatingsAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        items = TitleRating.objects.filter(user=request.user).select_related("title")
+        return Response(TitleRatingSerializer(items, many=True).data)
+
+    def post(self, request):
+        serializer = TitleRatingActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        title = Title.objects.get(slug=serializer.validated_data["title_slug"])
+
+        item, _ = TitleRating.objects.update_or_create(
+            user=request.user,
+            title=title,
+            defaults={
+                "rating": serializer.validated_data["rating"],
+                "review": serializer.validated_data.get("review", ""),
+            },
+        )
+
+        return Response(TitleRatingSerializer(item).data, status=status.HTTP_200_OK)
+
+
+class TitleRatingRemoveAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, title_slug):
+        TitleRating.objects.filter(user=request.user, title__slug=title_slug).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { logoutUser, type AuthUser } from "@/services/auth";
+import { getCurrentProfile } from "@/services/profile";
 
 const menuItems = [
   { label: "Your profile", href: "/profile" },
@@ -50,22 +51,44 @@ export function ProfileMenu({
     };
   }, []);
 
-    async function handleLogout() {
+  async function handleLogout() {
+    const path = window.location.pathname;
+    let publicProfilePath: string | null = null;
+    const isPrivateProfilePath =
+      path === "/profile" ||
+      path === "/profile/watchlist" ||
+      path === "/profile/favorites" ||
+      path === "/profile/history" ||
+      path === "/profile/ratings" ||
+      path.startsWith("/profile/settings");
+
     try {
-        await logoutUser();
+      if (isPrivateProfilePath) {
+        const profile = await getCurrentProfile();
+        const username = profile.username_slug || profile.username;
+        publicProfilePath = username ? `/profile/${username}` : null;
+      }
+    } catch {
+      publicProfilePath = null;
+    }
+
+    try {
+      await logoutUser();
     } finally {
-        setOpen(false);
-        onAction?.();
+      setOpen(false);
+      onAction?.();
 
-        const path = window.location.pathname;
-
-        if (path.startsWith("/profile")) {
-        window.location.href = "/login";
-        } else {
-        window.location.reload();
-        }
+      if (publicProfilePath) {
+        window.location.href = publicProfilePath;
+      } else if (path.startsWith("/profile/") && !isPrivateProfilePath) {
+        window.location.href = path;
+      } else if (isPrivateProfilePath) {
+        window.location.href = "/login?next=/profile";
+      } else {
+        window.location.href = path;
+      }
     }
-    }
+  }
 
   return (
     <div ref={wrapperRef} className="relative">

@@ -26,6 +26,11 @@ class TitleListAPIView(ListAPIView):
         min_rating = self.request.query_params.get("min_rating")
         min_votes = self.request.query_params.get("min_votes")
         genre = self.request.query_params.get("genre")
+        country = self.request.query_params.get("country")
+        year = self.request.query_params.get("year")
+        language = self.request.query_params.get("language")
+        age_rating = self.request.query_params.get("age_rating")
+        provider = self.request.query_params.get("provider")
 
         if q:
             queryset = queryset.filter(
@@ -49,6 +54,27 @@ class TitleListAPIView(ListAPIView):
 
         if genre:
             queryset = queryset.filter(genres__name__iexact=genre)
+
+        if country:
+            queryset = queryset.filter(country_codes__contains=[country])
+
+        if year:
+            try:
+                year_int = int(year)
+                queryset = queryset.filter(
+                    Q(release_date__year=year_int) | Q(first_air_date__year=year_int)
+                )
+            except ValueError:
+                pass
+
+        if language:
+            queryset = queryset.filter(original_language__iexact=language)
+
+        if age_rating:
+            queryset = queryset.filter(age_rating__iexact=age_rating)
+
+        if provider:
+            queryset = queryset.filter(watch_providers__provider_name__icontains=provider)
 
         ordering_map = {
             "popularity": ["-popularity", "-vote_count", "name"],

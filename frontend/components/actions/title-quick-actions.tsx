@@ -16,20 +16,19 @@ import {
 export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
   
   useEffect(() => {
-  async function loadStatus() {
-    try {
-      const status = await getTitleInteractionStatus(titleSlug);
-      setFavorite(status.is_favorite);
-      setWatchlist(status.in_watchlist);
-      setWatched(status.is_watched);
-    } catch {
-      // user not signed in
+    async function loadStatus() {
+      try {
+        const status = await getTitleInteractionStatus(titleSlug);
+        setFavorite(status.is_favorite);
+        setWatchlist(status.in_watchlist);
+        setWatched(status.is_watched);
+      } catch {
+        // logged out or unavailable
+      }
     }
-  }
 
-  loadStatus();
-}, [titleSlug]);
-
+    loadStatus();
+  }, [titleSlug]);
   const [favorite, setFavorite] = useState(false);
   const [watchlist, setWatchlist] = useState(false);
   const [watched, setWatched] = useState(false);
@@ -86,18 +85,18 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
     }
 
   return (
-    <div className="absolute right-2 top-2 z-20 flex gap-1">
+    <div className="pointer-events-none absolute inset-x-2 top-2 z-20 flex justify-end gap-1 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
       <button
         onClick={toggleFavorite}
         className={[
           "flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-sm transition",
           favorite
-            ? "border-accent bg-accent text-accent-foreground"
+            ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
         title="Favorite"
       >
-        ★
+        {favorite ? "♥" : "♡"}
       </button>
 
       <button

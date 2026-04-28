@@ -10,7 +10,7 @@ import {
 import { SavedTitlesClient } from "@/components/profile/saved-titles-client";
 import { FavoritePeopleClient } from "@/components/profile/favorite-people-client";
 
-type Tab = "all" | "movies" | "tv" | "people";
+type Tab = "all" | "titles" | "people";
 
 export function FavoritesPageClient() {
   const [tab, setTab] = useState<Tab>("all");
@@ -35,13 +35,7 @@ export function FavoritesPageClient() {
     load();
   }, []);
 
-  const filteredTitles = titles.filter((item) => {
-    if (tab === "movies") return item.media_type === "movie";
-    if (tab === "tv") return item.media_type === "tv";
-    if (tab === "people") return false;
-    return true;
-  });
-
+  const showTitles = tab === "all" || tab === "titles";
   const showPeople = tab === "all" || tab === "people";
 
   if (loading) {
@@ -64,8 +58,7 @@ export function FavoritesPageClient() {
       <div className="mb-8 inline-flex rounded-full border border-border bg-card p-1">
         {[
           { label: "All", value: "all" },
-          { label: "Movies", value: "movies" },
-          { label: "TV Shows", value: "tv" },
+          { label: "Titles", value: "titles" },
           { label: "People", value: "people" },
         ].map((item) => (
           <button
@@ -83,11 +76,11 @@ export function FavoritesPageClient() {
         ))}
       </div>
 
-      {tab !== "people" ? (
+      {showTitles ? (
         <SavedTitlesClient
           title=""
           description=""
-          items={filteredTitles}
+          items={titles}
           type="favorites"
           compactHeader
         />

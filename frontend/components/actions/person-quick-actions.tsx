@@ -24,18 +24,17 @@ export function PersonQuickActions({ personSlug }: { personSlug: string }) {
   }
 
   return (
-    <div className="absolute right-2 top-2 z-20">
-      <button
+    <div className="pointer-events-none absolute right-2 top-2 z-20 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">        <button
         onClick={toggleFavorite}
         className={[
           "flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-sm transition",
           favorite
-            ? "border-accent bg-accent text-accent-foreground"
+            ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
         title="Favorite person"
       >
-        ★
+        {favorite ? "♥" : "♡"}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { TitleCredit } from "@/types/title";
 import { tmdbProfileUrl } from "@/lib/images";
+import { PersonQuickActions } from "@/components/actions/person-quick-actions";
 
 export function TitleCreditsGrid({ credits }: { credits: TitleCredit[] }) {
   return (
@@ -19,8 +20,9 @@ export function TitleCreditsGrid({ credits }: { credits: TitleCredit[] }) {
             <Link
               key={credit.id}
               href={`/person/${credit.person_slug}`}
-              className="rounded-2xl border border-border bg-card px-4 py-3 transition hover:border-accent/60 hover:shadow-sm"
+              className="relative rounded-2xl border border-border bg-card px-4 py-3 transition hover:border-accent/60 hover:shadow-sm"
             >
+              <PersonQuickActions personSlug={credit.person_slug} />
               <div className="flex items-center gap-3">
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
                   {profileUrl ? (

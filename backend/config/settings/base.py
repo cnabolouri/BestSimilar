@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     "django_celery_results",
     "pgvector.django",
     "corsheaders",
-    "apps.accounts",
+    "apps.accounts.apps.AccountsConfig",
     "apps.catalog",
     "apps.people",
     "apps.credits",

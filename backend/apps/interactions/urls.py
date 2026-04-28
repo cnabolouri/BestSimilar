@@ -9,9 +9,23 @@ from apps.interactions.views import (
     FavoritePersonRemoveAPIView,
     WatchedTitlesAPIView,
     WatchedTitleRemoveAPIView,
+    TitleRatingsAPIView,
+    TitleRatingRemoveAPIView,
+    MyInteractionSummaryView,
+    PublicProfileFavoritesAPIView,
+    PublicProfileHistoryAPIView,
+    PublicProfileRatingsAPIView,
+    PublicProfileReviewsAPIView,
+    PublicProfileWatchlistAPIView,
 )
 
 urlpatterns = [
+    path("me/summary/", MyInteractionSummaryView.as_view(), name="interaction-summary"),
+    path("profiles/<slug:username>/watchlist/", PublicProfileWatchlistAPIView.as_view(), name="public-profile-watchlist"),
+    path("profiles/<slug:username>/favorites/", PublicProfileFavoritesAPIView.as_view(), name="public-profile-favorites"),
+    path("profiles/<slug:username>/history/", PublicProfileHistoryAPIView.as_view(), name="public-profile-history"),
+    path("profiles/<slug:username>/ratings/", PublicProfileRatingsAPIView.as_view(), name="public-profile-ratings"),
+    path("profiles/<slug:username>/reviews/", PublicProfileReviewsAPIView.as_view(), name="public-profile-reviews"),
     path("watchlist/", WatchlistAPIView.as_view(), name="watchlist"),
     path("watchlist/<slug:title_slug>/", WatchlistRemoveAPIView.as_view(), name="watchlist-remove"),
     path("favorites/titles/", FavoriteTitlesAPIView.as_view(), name="favorite-titles"),
@@ -21,4 +35,6 @@ urlpatterns = [
     path("favorites/people/<slug:person_slug>/", FavoritePersonRemoveAPIView.as_view(), name="favorite-person-remove"),
     path("history/", WatchedTitlesAPIView.as_view(), name="watched-titles"),
     path("history/<slug:title_slug>/", WatchedTitleRemoveAPIView.as_view(), name="watched-title-remove"),
+    path("ratings/", TitleRatingsAPIView.as_view(), name="title-ratings"),
+    path("ratings/<slug:title_slug>/", TitleRatingRemoveAPIView.as_view(), name="title-rating-remove"),
 ]

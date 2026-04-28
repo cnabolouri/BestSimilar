@@ -8,7 +8,7 @@ type Mode = "login" | "signup";
 
 export function AuthForm() {
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get("next") || "/";
+  const nextUrl = searchParams.get("next") || "/profile";
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

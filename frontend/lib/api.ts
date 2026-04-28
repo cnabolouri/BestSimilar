@@ -105,6 +105,13 @@ export async function apiPost<T>(path: string, body: unknown) {
   });
 }
 
+export async function apiPatch<T>(path: string, body: unknown) {
+  return fetchJson<T>(path, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
 export async function apiDelete<T>(path: string) {
   return fetchJson<T>(path, {
     method: "DELETE",

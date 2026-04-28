@@ -41,6 +41,11 @@ export async function browseTitles(input: {
   ordering?: string;
   page?: number;
   genre?: string;
+  country?: string;
+  year?: string;
+  language?: string;
+  age_rating?: string;
+  provider?: string;
   min_rating?: string;
   min_votes?: string;
 }) {
@@ -50,6 +55,11 @@ export async function browseTitles(input: {
   if (input.ordering) params.set("ordering", input.ordering);
   if (input.page) params.set("page", String(input.page));
   if (input.genre) params.set("genre", input.genre);
+  if (input.country) params.set("country", input.country);
+  if (input.year) params.set("year", input.year);
+  if (input.language) params.set("language", input.language);
+  if (input.age_rating) params.set("age_rating", input.age_rating);
+  if (input.provider) params.set("provider", input.provider);
   if (input.min_rating) params.set("min_rating", input.min_rating);
   if (input.min_votes) params.set("min_votes", input.min_votes);
 

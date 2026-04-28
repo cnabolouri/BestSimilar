@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { RelatedPerson } from "@/types/person";
 import { tmdbProfileUrl } from "@/lib/images";
+import { PersonQuickActions } from "@/components/actions/person-quick-actions";
 
 export function RelatedPeopleSection({
   people,
@@ -28,8 +29,9 @@ export function RelatedPeopleSection({
               <Link
                 key={person.id}
                 href={`/person/${person.slug}`}
-                className="group rounded-3xl border border-border bg-background p-3 transition hover:border-accent/60 hover:shadow-sm"
+                className="group relative rounded-3xl border border-border bg-background p-3 transition hover:border-accent/60 hover:shadow-sm"
               >
+                <PersonQuickActions personSlug={person.slug} />
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-border bg-card">
                   {profileUrl ? (
                     <Image

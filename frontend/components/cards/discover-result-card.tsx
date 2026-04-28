@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { DiscoverResult } from "@/types/discover";
 import { tmdbPosterUrl } from "@/lib/images";
+import { TitleQuickActions } from "@/components/actions/title-quick-actions";
 
 export function DiscoverResultCard({ item }: { item: DiscoverResult }) {
   const href = item.media_type === "movie" ? `/movie/${item.slug}` : `/tv/${item.slug}`;
@@ -17,6 +18,7 @@ export function DiscoverResultCard({ item }: { item: DiscoverResult }) {
         className="group block rounded-3xl border border-border bg-card p-4 transition-all duration-200 hover:border-accent/60 hover:shadow-md"
       >
         <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-border bg-background">
+          <TitleQuickActions titleSlug={item.slug} />
           {posterUrl ? (
             <Image
               src={posterUrl}

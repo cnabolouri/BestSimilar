@@ -5,6 +5,9 @@ from apps.interactions.models import FavoriteTitle, WatchlistItem
 from apps.people.models import Person
 from apps.interactions.models import FavoritePerson
 from apps.interactions.models import WatchedTitle
+from apps.interactions.models import TitleRating
+
+
 class TitleActionSerializer(serializers.Serializer):
     title_slug = serializers.CharField()
 
@@ -66,4 +69,29 @@ class WatchedTitleSerializer(serializers.ModelSerializer):
             "media_type",
             "poster_url",
             "watched_at",
+        ]
+        
+class TitleRatingActionSerializer(serializers.Serializer):
+    title_slug = serializers.CharField()
+    rating = serializers.IntegerField(min_value=1, max_value=10)
+    review = serializers.CharField(required=False, allow_blank=True)
+
+
+class TitleRatingSerializer(serializers.ModelSerializer):
+    title_name = serializers.CharField(source="title.name", read_only=True)
+    title_slug = serializers.CharField(source="title.slug", read_only=True)
+    media_type = serializers.CharField(source="title.media_type", read_only=True)
+    poster_url = serializers.CharField(source="title.poster_url", read_only=True)
+
+    class Meta:
+        model = TitleRating
+        fields = [
+            "id",
+            "title_name",
+            "title_slug",
+            "media_type",
+            "poster_url",
+            "rating",
+            "review",
+            "rated_at",
         ]

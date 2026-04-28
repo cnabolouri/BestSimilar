@@ -50,3 +50,17 @@ class WatchedTitle(models.Model):
 
     def __str__(self):
         return f"{self.user} watched {self.title}"
+    
+class TitleRating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="title_ratings")
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="user_ratings")
+    rating = models.PositiveSmallIntegerField()
+    review = models.TextField(blank=True)
+    rated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "title")
+        ordering = ["-rated_at"]
+
+    def __str__(self):
+        return f"{self.user} rated {self.title} {self.rating}/10"

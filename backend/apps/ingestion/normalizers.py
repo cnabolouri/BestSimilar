@@ -12,6 +12,33 @@ def build_person_slug(name: str, tmdb_id: int) -> str:
     return f"{slugify(name)}-{tmdb_id}"
 
 
+def extract_movie_age_rating(data: dict, country_code: str = "US") -> str:
+    release_dates = data.get("release_dates", {}).get("results", [])
+
+    for country in release_dates:
+        if country.get("iso_3166_1") != country_code:
+            continue
+
+        for release in country.get("release_dates", []):
+            certification = release.get("certification", "")
+            if certification:
+                return certification
+
+    return ""
+
+
+def extract_tv_age_rating(data: dict, country_code: str = "US") -> str:
+    content_ratings = data.get("content_ratings", {}).get("results", [])
+
+    for country in content_ratings:
+        if country.get("iso_3166_1") != country_code:
+            continue
+
+        return country.get("rating", "") or ""
+
+    return ""
+
+
 def normalize_movie_payload(data: dict) -> dict:
     return {
         "tmdb_id": data["id"],
@@ -28,6 +55,7 @@ def normalize_movie_payload(data: dict) -> dict:
         "backdrop_url": data.get("backdrop_path", "") or "",
         "release_date": data.get("release_date") or None,
         "runtime_minutes": data.get("runtime") or None,
+        "age_rating": extract_movie_age_rating(data),
         "popularity": data.get("popularity", 0.0) or 0.0,
         "vote_average": data.get("vote_average", 0.0) or 0.0,
         "vote_count": data.get("vote_count", 0) or 0,
@@ -54,6 +82,7 @@ def normalize_tv_payload(data: dict) -> dict:
         "episode_run_times": data.get("episode_run_time", []),
         "seasons_count": data.get("number_of_seasons") or None,
         "episodes_count": data.get("number_of_episodes") or None,
+        "age_rating": extract_tv_age_rating(data),
         "popularity": data.get("popularity", 0.0) or 0.0,
         "vote_average": data.get("vote_average", 0.0) or 0.0,
         "vote_count": data.get("vote_count", 0) or 0,

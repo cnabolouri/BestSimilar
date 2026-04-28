@@ -9,9 +9,14 @@ import {
   removeFavoriteTitle,
   removeFromWatchlist,
   removeWatchedTitle,
+  rateTitle,
+  removeRating,
 } from "@/services/interactions";
+import { RatingStar } from "@/components/actions/rating-star";
+import { TitleRatingControl } from "@/components/title/title-rating-control";
 
 export function TitleActions({ titleSlug }: { titleSlug: string }) {
+  const [userRating, setUserRating] = useState<number | null>(null);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isWatched, setIsWatched] = useState(false);
@@ -23,6 +28,7 @@ export function TitleActions({ titleSlug }: { titleSlug: string }) {
     async function loadStatus() {
       try {
         const status = await getTitleInteractionStatus(titleSlug);
+        setUserRating(status.user_rating);
         setInWatchlist(status.in_watchlist);
         setIsFavorite(status.is_favorite);
         setIsWatched(status.is_watched);
@@ -84,6 +90,40 @@ export function TitleActions({ titleSlug }: { titleSlug: string }) {
       }
     } catch {
       setMessage("Could not update favorites.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRate(value: number) {
+    if (requireSignIn()) return;
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      await rateTitle({ titleSlug, rating: value });
+      setUserRating(value);
+      setMessage(`Rated ${value}/10.`);
+    } catch {
+      setMessage("Could not save rating.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRemoveRating() {
+    if (requireSignIn()) return;
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      await removeRating(titleSlug);
+      setUserRating(null);
+      setMessage("Rating removed.");
+    } catch {
+      setMessage("Could not remove rating.");
     } finally {
       setLoading(false);
     }
@@ -153,11 +193,22 @@ export function TitleActions({ titleSlug }: { titleSlug: string }) {
         >
           {isWatched ? "👁 Watched" : "👁 Mark watched"}
         </button>
+        {/* <RatingStar titleSlug={titleSlug} /> */}
+        {/* <TitleRatingControl
+          titleSlug={titleSlug}
+          userRating={userRating}
+          signedIn={signedIn}
+          onRatingChange={setUserRating}
+          onMessage={setMessage}
+        /> */}
       </div>
-
-      {message ? (
-        <p className="mt-3 text-xs text-muted-foreground">{message}</p>
-      ) : null}
+      <TitleRatingControl
+        titleSlug={titleSlug}
+        userRating={userRating}
+        signedIn={signedIn}
+        onRatingChange={setUserRating}
+        onMessage={setMessage}
+      />
     </div>
   );
 }
