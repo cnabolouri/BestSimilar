@@ -1,4 +1,4 @@
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 
 export type ProfileUser = {
   display_name: string;
@@ -48,6 +48,11 @@ export type TastePreferences = {
   avoided_genres: string[];
 };
 
+export type SecurityDetails = {
+  username: string;
+  email: string;
+};
+
 export function getCurrentProfile() {
   return apiGet<ProfileUser>("/auth/profile/");
 }
@@ -86,4 +91,19 @@ export function getTastePreferences() {
 
 export function updateTastePreferences(payload: Partial<TastePreferences>) {
   return apiPatch<TastePreferences>("/auth/profile/preferences/", payload);
+}
+
+export function getSecurityDetails() {
+  return apiGet<SecurityDetails>("/auth/profile/security/");
+}
+
+export function updateSecurityDetails(payload: { username: string; email: string }) {
+  return apiPatch<SecurityDetails>("/auth/profile/security/", payload);
+}
+
+export function changePassword(payload: {
+  current_password: string;
+  new_password: string;
+}) {
+  return apiPost<{ detail: string }>("/auth/profile/change-password/", payload);
 }

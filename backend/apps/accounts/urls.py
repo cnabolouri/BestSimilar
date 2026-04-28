@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.accounts.views import (
+    ChangePasswordAPIView,
     LoginAPIView,
     LogoutAPIView,
     MeAPIView,
@@ -9,7 +10,9 @@ from apps.accounts.views import (
     ProfileSummaryAPIView,
     PublicProfileAPIView,
     PublicProfileOverviewAPIView,
+    PublicProfileSearchAPIView,
     PublicProfileSummaryAPIView,
+    SecurityAPIView,
     SignupAPIView,
     SiteSettingsAPIView,
     TastePreferencesAPIView,
@@ -20,8 +23,11 @@ urlpatterns = [
     path("profile/", ProfileAPIView.as_view(), name="auth-profile"),
     path("profile/summary/", ProfileSummaryAPIView.as_view(), name="auth-profile-summary"),
     path("profile/privacy/", PrivacySettingsAPIView.as_view(), name="auth-profile-privacy"),
+    path("profile/security/", SecurityAPIView.as_view(), name="auth-profile-security"),
+    path("profile/change-password/", ChangePasswordAPIView.as_view(), name="auth-profile-change-password"),
     path("profile/site-settings/", SiteSettingsAPIView.as_view(), name="auth-profile-site-settings"),
     path("profile/preferences/", TastePreferencesAPIView.as_view(), name="auth-profile-preferences"),
+    path("profiles/search/", PublicProfileSearchAPIView.as_view(), name="public-profile-search"),
     path("profiles/<slug:username>/", PublicProfileAPIView.as_view(), name="public-profile"),
     path("profiles/<slug:username>/summary/", PublicProfileSummaryAPIView.as_view(), name="public-profile-summary"),
     path("profiles/<slug:username>/overview/", PublicProfileOverviewAPIView.as_view(), name="public-profile-overview"),

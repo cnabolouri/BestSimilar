@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ChevronRight,
-  MonitorCog,
+  Settings,
   Shield,
   ShieldCheck,
   SlidersHorizontal,
@@ -12,16 +12,16 @@ import {
 export function AccountSettingsSection() {
   const settings = [
     {
+      label: "All Settings",
+      href: "/profile/settings",
+      description: "Open the full account settings center.",
+      icon: Settings,
+    },
+    {
       label: "Personal Info",
       href: "/profile/settings/personal-info",
       description: "Edit your display name, profile image, and bio.",
       icon: UserRound,
-    },
-    {
-      label: "Login & Security",
-      href: "/profile/settings/login-security",
-      description: "Change your username, email, password, and sign-in options.",
-      icon: ShieldCheck,
     },
     {
       label: "Privacy",
@@ -36,10 +36,10 @@ export function AccountSettingsSection() {
       icon: SlidersHorizontal,
     },
     {
-      label: "Site Settings",
-      href: "/profile/settings/site",
-      description: "Theme, layout density, autoplay, and display options.",
-      icon: MonitorCog,
+      label: "Login & Security",
+      href: "/profile/settings/login-security",
+      description: "Change your username, email, password, and sign-in options.",
+      icon: ShieldCheck,
     },
     {
       label: "Delete Account",

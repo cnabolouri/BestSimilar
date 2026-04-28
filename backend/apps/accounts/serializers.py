@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from apps.accounts.models import (
@@ -18,6 +19,7 @@ RESERVED_USERNAMES = {
     "history",
     "ratings",
     "reviews",
+    "search",
     "admin",
     "api",
     "login",
@@ -145,3 +147,54 @@ class UserTastePreferencesSerializer(serializers.ModelSerializer):
             "preferred_providers",
             "avoided_genres",
         ]
+
+
+class UserSecuritySerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(allow_blank=True, required=False)
+
+    def validate_username(self, value):
+        value = value.strip()
+        if value.lower() in RESERVED_USERNAMES:
+            raise serializers.ValidationError("This username is reserved.")
+        user = self.context["request"].user
+        if User.objects.exclude(pk=user.pk).filter(username__iexact=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
+
+    def validate_email(self, value):
+        value = value.strip()
+        user = self.context["request"].user
+        if value and User.objects.exclude(pk=user.pk).filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.username = self.validated_data["username"]
+        user.email = self.validated_data.get("email", "")
+        user.save(update_fields=["username", "email"])
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.username_slug = user.username
+        profile.save(update_fields=["username_slug"])
+        return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_current_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        validate_password(value, self.context["request"].user)
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user

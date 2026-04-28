@@ -25,11 +25,11 @@ export function ProfileSettingsShell({
       >
         <div className="mb-5">
           <Link
-            href="/profile"
+            href="/profile/settings"
             className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to profile
+            Back to settings
           </Link>
 
           <h1

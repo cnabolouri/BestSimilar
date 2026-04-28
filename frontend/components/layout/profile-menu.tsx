@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { logoutUser, type AuthUser } from "@/services/auth";
-import { getCurrentProfile } from "@/services/profile";
+import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
+import { logoutUser } from "@/services/auth";
+import { getCurrentProfile, type ProfileUser } from "@/services/profile";
 
 const menuItems = [
-  { label: "Your profile", href: "/profile" },
+  { label: "My Profile", href: "/profile" },
+  { label: "Account Settings", href: "/profile/settings" },
+  { label: "Find Profiles", href: "/profile/search" },
   { label: "Your watchlist", href: "/profile/watchlist" },
   { label: "Your favorites", href: "/profile/favorites" },
   { label: "Your ratings", href: "/profile/ratings" },
   { label: "Watch history", href: "/profile/history" },
-  { label: "Account settings", href: "/profile/settings" },
 ];
 
 export function ProfileMenu({
@@ -19,14 +21,13 @@ export function ProfileMenu({
   onAction,
   compact = false,
 }: {
-  user: AuthUser;
+  user: ProfileUser;
   onAction?: () => void;
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-
-  const initial = user.username?.[0]?.toUpperCase() || "U";
+  const displayLabel = user.display_name || user.username || "Profile";
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -101,12 +102,15 @@ export function ProfileMenu({
             compact ? "px-2.5" : "px-2.5 pr-3",
           ].join(" ")}
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-            {initial}
-          </span>
+          <HeaderAvatar
+            displayName={user.display_name}
+            username={user.username}
+            avatarUrl={user.avatar_url}
+            size="sm"
+          />
           {!compact ? (
             <span className="hidden max-w-24 truncate sm:inline">
-              {user.username}
+              {displayLabel}
             </span>
           ) : null}
         </Link>
@@ -125,7 +129,20 @@ export function ProfileMenu({
       {open ? (
         <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-3xl border border-border bg-background shadow-xl">
           <div className="border-b border-border px-4 py-4">
-            <p className="text-sm font-semibold">{user.username}</p>
+            <div className="flex items-center gap-3">
+              <HeaderAvatar
+                displayName={user.display_name}
+                username={user.username}
+                avatarUrl={user.avatar_url}
+                size="md"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{displayLabel}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  @{user.username_slug || user.username}
+                </p>
+              </div>
+            </div>
             {user.email ? (
               <p className="mt-1 truncate text-xs text-muted-foreground">
                 {user.email}

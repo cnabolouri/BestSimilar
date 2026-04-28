@@ -14,6 +14,13 @@ from apps.interactions.serializers import (
     TitleActionSerializer,
     WatchlistItemSerializer,
 )
+from apps.interactions.serializers_public import (
+    PublicFavoritePersonPreviewSerializer,
+    PublicFavoriteTitlePreviewSerializer,
+    PublicHistoryPreviewSerializer,
+    PublicRatingPreviewSerializer,
+    PublicWatchlistPreviewSerializer,
+)
 from apps.people.models import Person
 from apps.interactions.models import FavoritePerson
 from apps.interactions.serializers import FavoritePersonSerializer, PersonActionSerializer
@@ -81,7 +88,7 @@ class PublicProfileWatchlistAPIView(APIView):
             .select_related("title")
             .order_by("-created_at")
         )
-        return Response(WatchlistItemSerializer(items, many=True).data)
+        return Response(PublicWatchlistPreviewSerializer(items, many=True).data)
 
 
 class PublicProfileFavoritesAPIView(APIView):
@@ -89,19 +96,24 @@ class PublicProfileFavoritesAPIView(APIView):
 
     def get(self, request, username):
         target_user = get_public_profile_user_or_404(username)
-        assert_public_section_allowed(target_user, "favorites")
         privacy, _ = UserPrivacySettings.objects.get_or_create(user=target_user)
+        show_favorite_titles = getattr(privacy, "show_favorite_titles", False)
+        show_favorite_people = getattr(privacy, "show_favorite_people", False)
+
+        if not show_favorite_titles and not show_favorite_people:
+            raise PermissionDenied("This profile section is private.")
+
         title_favorites = FavoriteTitle.objects.none()
         person_favorites = FavoritePerson.objects.none()
 
-        if privacy.show_favorite_titles:
+        if show_favorite_titles:
             title_favorites = (
                 FavoriteTitle.objects.filter(user=target_user)
                 .select_related("title")
                 .order_by("-created_at")
             )
 
-        if privacy.show_favorite_people:
+        if show_favorite_people:
             person_favorites = (
                 FavoritePerson.objects.filter(user=target_user)
                 .select_related("person")
@@ -110,8 +122,14 @@ class PublicProfileFavoritesAPIView(APIView):
 
         return Response(
             {
-                "titles": FavoriteTitleSerializer(title_favorites, many=True).data,
-                "people": FavoritePersonSerializer(person_favorites, many=True).data,
+                "titles": PublicFavoriteTitlePreviewSerializer(
+                    title_favorites,
+                    many=True,
+                ).data,
+                "people": PublicFavoritePersonPreviewSerializer(
+                    person_favorites,
+                    many=True,
+                ).data,
             }
         )
 
@@ -127,7 +145,7 @@ class PublicProfileHistoryAPIView(APIView):
             .select_related("title")
             .order_by("-watched_at")
         )
-        return Response(WatchedTitleSerializer(history, many=True).data)
+        return Response(PublicHistoryPreviewSerializer(history, many=True).data)
 
 
 class PublicProfileRatingsAPIView(APIView):
@@ -141,7 +159,7 @@ class PublicProfileRatingsAPIView(APIView):
             .select_related("title")
             .order_by("-rated_at")
         )
-        return Response(TitleRatingSerializer(ratings, many=True).data)
+        return Response(PublicRatingPreviewSerializer(ratings, many=True).data)
 
 
 class PublicProfileReviewsAPIView(APIView):
@@ -156,7 +174,7 @@ class PublicProfileReviewsAPIView(APIView):
             .select_related("title")
             .order_by("-rated_at")
         )
-        return Response(TitleRatingSerializer(reviews, many=True).data)
+        return Response(PublicRatingPreviewSerializer(reviews, many=True).data)
 
 
 class WatchlistAPIView(APIView):

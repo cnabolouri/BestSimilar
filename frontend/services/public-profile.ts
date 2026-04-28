@@ -1,17 +1,36 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
+export class PublicApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+export function isPublicApiError(error: unknown, status: number): boolean {
+  return error instanceof PublicApiError && error.status === status;
+}
+
 async function publicApiFetch<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     cache: "no-store",
   });
 
+  const data = await response.json().catch(() => null);
+
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new PublicApiError(
+      response.status,
+      data?.detail ?? `API request failed: ${response.status}`,
+    );
   }
 
-  return response.json() as Promise<T>;
+  return data as T;
 }
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type PublicProfile = {
   display_name: string;
@@ -41,9 +60,40 @@ export type PublicProfileSummary = {
   };
 };
 
+export type PublicTitleMini = {
+  slug: string;
+  title: string;
+  poster_url: string;
+  media_type: string;
+  release_year: number | null;
+  vote_average: number | null;
+};
+
+export type PublicPersonMini = {
+  slug: string;
+  name: string;
+  profile_url: string;
+  known_for_department: string;
+};
+
+export type PublicTitlePreviewItem = {
+  id: number;
+  title: PublicTitleMini;
+  rating?: number;
+  review?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PublicPersonPreviewItem = {
+  id: number;
+  person: PublicPersonMini;
+  created_at?: string;
+};
+
 export type PublicFavoritesResponse = {
-  titles: unknown[];
-  people: unknown[];
+  titles: PublicTitlePreviewItem[];
+  people: PublicPersonPreviewItem[];
 };
 
 export type PublicProfileOverview = {
@@ -67,19 +117,21 @@ export type PublicProfileOverview = {
     watched_count: number | null;
   };
   previews: {
-    watchlist: unknown[];
-    favorite_titles: unknown[];
-    favorite_people: unknown[];
-    ratings: unknown[];
-    reviews: unknown[];
-    history: unknown[];
+    watchlist: PublicTitlePreviewItem[];
+    favorite_titles: PublicTitlePreviewItem[];
+    favorite_people: PublicPersonPreviewItem[];
+    ratings: PublicTitlePreviewItem[];
+    reviews: PublicTitlePreviewItem[];
+    history: PublicTitlePreviewItem[];
   };
   insights: {
-    top_genres: unknown[];
-    top_years: unknown[];
-    rating_breakdown: unknown[];
+    top_genres: { name?: string; count: number }[];
+    top_years: { year?: number; count: number }[];
+    rating_breakdown: { rating?: number; count: number }[];
   };
 };
+
+// ─── Overview & profile ───────────────────────────────────────────────────────
 
 export function getPublicProfile(username: string) {
   return publicApiFetch<PublicProfile>(
@@ -99,24 +151,59 @@ export function getPublicProfileOverview(username: string) {
   );
 }
 
+export function searchPublicProfiles(query: string) {
+  return publicApiFetch<PublicProfile[]>(
+    `/auth/profiles/search/?q=${encodeURIComponent(query)}`,
+  );
+}
+
+// ─── Section pages — served from /interactions/profiles/ ─────────────────────
+
+export function getPublicProfileWatchlist(username: string) {
+  return publicApiFetch<PublicTitlePreviewItem[]>(
+    `/interactions/profiles/${encodeURIComponent(username)}/watchlist/`,
+  );
+}
+
+export function getPublicProfileFavorites(username: string) {
+  return publicApiFetch<PublicFavoritesResponse>(
+    `/interactions/profiles/${encodeURIComponent(username)}/favorites/`,
+  );
+}
+
+export function getPublicProfileRatings(username: string) {
+  return publicApiFetch<PublicTitlePreviewItem[]>(
+    `/interactions/profiles/${encodeURIComponent(username)}/ratings/`,
+  );
+}
+
+export function getPublicProfileHistory(username: string) {
+  return publicApiFetch<PublicTitlePreviewItem[]>(
+    `/interactions/profiles/${encodeURIComponent(username)}/history/`,
+  );
+}
+
+export function getPublicProfileReviews(username: string) {
+  return publicApiFetch<PublicTitlePreviewItem[]>(
+    `/interactions/profiles/${encodeURIComponent(username)}/reviews/`,
+  );
+}
+
+// ─── Legacy helper (kept for backward compat) ─────────────────────────────────
+
 export async function getPublicInteractionSection<T>(
   username: string,
   section: string,
 ) {
-  const response = await fetch(
-    `${API_BASE_URL}/interactions/profiles/${encodeURIComponent(username)}/${section}/`,
-    {
-      cache: "no-store",
-    },
-  );
-
-  if (response.status === 403) {
-    return { status: "private" as const, data: null };
+  try {
+    const data = await publicApiFetch<T>(
+      `/interactions/profiles/${encodeURIComponent(username)}/${section}/`,
+    );
+    return { status: "public" as const, data };
+  } catch (error) {
+    if (isPublicApiError(error, 403)) {
+      return { status: "private" as const, data: null };
+    }
+    throw error;
   }
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
-  }
-
-  return { status: "public" as const, data: (await response.json()) as T };
 }

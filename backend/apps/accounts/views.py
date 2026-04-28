@@ -1,4 +1,5 @@
 from django.contrib.auth import login, logout
+from django.db import models
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -14,11 +15,13 @@ from apps.accounts.models import (
     UserTastePreferences,
 )
 from apps.accounts.serializers import (
+    ChangePasswordSerializer,
     LoginSerializer,
     PublicUserProfileSerializer,
     SignupSerializer,
     UserPrivacySettingsSerializer,
     UserProfileSerializer,
+    UserSecuritySerializer,
     UserSerializer,
     UserSiteSettingsSerializer,
     UserTastePreferencesSerializer,
@@ -30,12 +33,12 @@ from apps.interactions.models import (
     WatchedTitle,
     WatchlistItem,
 )
-from apps.interactions.serializers import (
-    FavoritePersonSerializer,
-    FavoriteTitleSerializer,
-    TitleRatingSerializer,
-    WatchedTitleSerializer,
-    WatchlistItemSerializer,
+from apps.interactions.serializers_public import (
+    PublicFavoritePersonPreviewSerializer,
+    PublicFavoriteTitlePreviewSerializer,
+    PublicHistoryPreviewSerializer,
+    PublicRatingPreviewSerializer,
+    PublicWatchlistPreviewSerializer,
 )
 
 
@@ -191,6 +194,43 @@ class TastePreferencesAPIView(APIView):
         return Response(serializer.data)
 
 
+class SecurityAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({
+            "username": request.user.username,
+            "email": request.user.email,
+        })
+
+    def patch(self, request):
+        serializer = UserSecuritySerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "username": user.username,
+            "email": user.email,
+        })
+
+
+class ChangePasswordAPIView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+
+
 class PublicProfileAPIView(APIView):
     permission_classes = [AllowAny]
 
@@ -200,6 +240,28 @@ class PublicProfileAPIView(APIView):
             username_slug=username,
         )
         return Response(PublicUserProfileSerializer(profile).data)
+
+
+class PublicProfileSearchAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get("q", "").strip()
+
+        if not query:
+            return Response([])
+
+        profiles = (
+            UserProfile.objects.select_related("user")
+            .filter(
+                models.Q(username_slug__icontains=query)
+                | models.Q(display_name__icontains=query)
+                | models.Q(user__username__icontains=query)
+            )
+            .order_by("username_slug")[:20]
+        )
+        serializer = PublicUserProfileSerializer(profiles, many=True)
+        return Response(serializer.data)
 
 
 class PublicProfileSummaryAPIView(APIView):
@@ -311,7 +373,7 @@ class PublicProfileOverviewAPIView(APIView):
             "rating_breakdown": [],
         }
 
-        visible_title_ids = set()
+        public_title_ids = set()
 
         if privacy.show_watchlist:
             watchlist_qs = (
@@ -320,11 +382,11 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-created_at")
             )
             stats["watchlist_count"] = watchlist_qs.count()
-            previews["watchlist"] = WatchlistItemSerializer(
+            previews["watchlist"] = PublicWatchlistPreviewSerializer(
                 watchlist_qs[:8],
                 many=True,
             ).data
-            visible_title_ids.update(watchlist_qs.values_list("title_id", flat=True))
+            public_title_ids.update(watchlist_qs.values_list("title_id", flat=True))
 
         if privacy.show_favorite_titles:
             favorite_titles_qs = (
@@ -333,11 +395,11 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-created_at")
             )
             stats["favorite_titles_count"] = favorite_titles_qs.count()
-            previews["favorite_titles"] = FavoriteTitleSerializer(
+            previews["favorite_titles"] = PublicFavoriteTitlePreviewSerializer(
                 favorite_titles_qs[:8],
                 many=True,
             ).data
-            visible_title_ids.update(
+            public_title_ids.update(
                 favorite_titles_qs.values_list("title_id", flat=True),
             )
 
@@ -348,7 +410,7 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-created_at")
             )
             stats["favorite_people_count"] = favorite_people_qs.count()
-            previews["favorite_people"] = FavoritePersonSerializer(
+            previews["favorite_people"] = PublicFavoritePersonPreviewSerializer(
                 favorite_people_qs[:8],
                 many=True,
             ).data
@@ -365,8 +427,11 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-rated_at")
             )
             stats["ratings_count"] = ratings_qs.count()
-            previews["ratings"] = TitleRatingSerializer(ratings_qs[:8], many=True).data
-            visible_title_ids.update(ratings_qs.values_list("title_id", flat=True))
+            previews["ratings"] = PublicRatingPreviewSerializer(
+                ratings_qs[:8],
+                many=True,
+            ).data
+            public_title_ids.update(ratings_qs.values_list("title_id", flat=True))
             insights["rating_breakdown"] = list(
                 ratings_qs.values("rating")
                 .annotate(count=Count("id"))
@@ -381,8 +446,11 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-rated_at")
             )
             stats["reviews_count"] = reviews_qs.count()
-            previews["reviews"] = TitleRatingSerializer(reviews_qs[:8], many=True).data
-            visible_title_ids.update(reviews_qs.values_list("title_id", flat=True))
+            previews["reviews"] = PublicRatingPreviewSerializer(
+                reviews_qs[:8],
+                many=True,
+            ).data
+            public_title_ids.update(reviews_qs.values_list("title_id", flat=True))
 
         if privacy.show_watch_history:
             history_qs = (
@@ -391,19 +459,27 @@ class PublicProfileOverviewAPIView(APIView):
                 .order_by("-watched_at")
             )
             stats["watched_count"] = history_qs.count()
-            previews["history"] = WatchedTitleSerializer(history_qs[:8], many=True).data
-            visible_title_ids.update(history_qs.values_list("title_id", flat=True))
+            previews["history"] = PublicHistoryPreviewSerializer(
+                history_qs[:8],
+                many=True,
+            ).data
+            public_title_ids.update(history_qs.values_list("title_id", flat=True))
 
-        if visible_title_ids:
+        if public_title_ids:
             from apps.catalog.models import Title
 
-            visible_titles = Title.objects.filter(id__in=visible_title_ids)
-            insights["top_genres"] = list(
-                visible_titles.values("genres__name")
-                .exclude(genres__name__isnull=True)
+            visible_titles = Title.objects.filter(id__in=public_title_ids)
+            genre_counts = (
+                visible_titles.exclude(genres__name__isnull=True)
+                .exclude(genres__name="")
+                .values("genres__name")
                 .annotate(count=Count("id"))
-                .order_by("-count", "genres__name")[:8],
+                .order_by("-count", "genres__name")[:8]
             )
+            insights["top_genres"] = [
+                {"name": item["genres__name"], "count": item["count"]}
+                for item in genre_counts
+            ]
 
             year_counts = {}
             for release_date, first_air_date in visible_titles.values_list(

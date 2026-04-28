@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   addFavoriteTitle,
@@ -11,10 +13,13 @@ import {
   removeWatchedTitle,
 } from "@/services/interactions";
 
-
-
 export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
-  
+  const pathname = usePathname();
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [favorite, setFavorite] = useState(false);
+  const [watchlist, setWatchlist] = useState(false);
+  const [watched, setWatched] = useState(false);
+
   useEffect(() => {
     async function loadStatus() {
       try {
@@ -22,21 +27,35 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
         setFavorite(status.is_favorite);
         setWatchlist(status.in_watchlist);
         setWatched(status.is_watched);
+        setAuthenticated(true);
       } catch {
-        // logged out or unavailable
+        setAuthenticated(false);
       }
     }
 
     loadStatus();
   }, [titleSlug]);
-  const [favorite, setFavorite] = useState(false);
-  const [watchlist, setWatchlist] = useState(false);
-  const [watched, setWatched] = useState(false);
+
+  // Still loading — render nothing to avoid layout shift.
+  if (authenticated === null) return null;
+
+  if (!authenticated) {
+    return (
+      <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
+        <Link
+          href={`/login?next=${encodeURIComponent(pathname)}`}
+          className="rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Log in to save
+        </Link>
+      </div>
+    );
+  }
 
   async function toggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-
     try {
       if (favorite) {
         await removeFavoriteTitle(titleSlug);
@@ -46,14 +65,13 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
         setFavorite(true);
       }
     } catch {
-      alert("Sign in to favorite titles.");
+      // silently ignore
     }
   }
 
   async function toggleWatchlist(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-
     try {
       if (watchlist) {
         await removeFromWatchlist(titleSlug);
@@ -63,26 +81,25 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
         setWatchlist(true);
       }
     } catch {
-      alert("Sign in to save to watchlist.");
+      // silently ignore
     }
   }
 
-    async function toggleWatched(e: React.MouseEvent) {
+  async function toggleWatched(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-
     try {
-        if (watched) {
+      if (watched) {
         await removeWatchedTitle(titleSlug);
         setWatched(false);
-        } else {
+      } else {
         await addWatchedTitle(titleSlug);
         setWatched(true);
-        }
+      }
     } catch {
-        alert("Sign in to mark titles as watched.");
+      // silently ignore
     }
-    }
+  }
 
   return (
     <div className="pointer-events-none absolute inset-x-2 top-2 z-20 flex justify-end gap-1 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">

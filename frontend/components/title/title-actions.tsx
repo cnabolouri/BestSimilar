@@ -12,7 +12,7 @@ import {
   rateTitle,
   removeRating,
 } from "@/services/interactions";
-import { RatingStar } from "@/components/actions/rating-star";
+// import { RatingStar } from "@/components/actions/rating-star";
 import { TitleRatingControl } from "@/components/title/title-rating-control";
 
 export function TitleActions({ titleSlug }: { titleSlug: string }) {
