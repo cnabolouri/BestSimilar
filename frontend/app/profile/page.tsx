@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AccountSettingsSection } from "@/components/profile/AccountSettingsSection";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileLibrarySection } from "@/components/profile/ProfileLibrarySection";
+import { ProfileRecommendationsSection } from "@/components/profile/ProfileRecommendationsSection";
 import { ProfileStatsGrid } from "@/components/profile/ProfileStatsGrid";
 import {
   getCurrentProfileServer,
@@ -69,19 +70,7 @@ export default async function ProfilePage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
-          <div>
-            <h2 className="text-lg font-semibold">Recommended For You</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Personalized recommendations will improve as you rate, favorite,
-              and watch more titles.
-            </p>
-          </div>
-
-          <div className="mt-4 rounded-xl border border-dashed border-border bg-muted/40 p-5 text-sm text-muted-foreground">
-            Start rating or saving titles to unlock better recommendations.
-          </div>
-        </section>
+        <ProfileRecommendationsSection />
       </div>
     </main>
   );

@@ -10,9 +10,11 @@ import { TitleKeyPeople } from "@/components/title/title-key-people";
 export function TitleDetailPage({
   title,
   similar,
+  episodesSlot,
 }: {
   title: TitleDetail;
   similar: SimilarTitle[];
+  episodesSlot?: React.ReactNode;
 }) {
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10 md:px-8 lg:px-10">
@@ -104,6 +106,10 @@ export function TitleDetailPage({
           <TitleCreditsGrid credits={title.credits} />
         </div>
       </section>
+
+      {episodesSlot ? (
+        <section className="mt-12">{episodesSlot}</section>
+      ) : null}
 
       <section className="mt-12">
         <TitleSimilarGrid items={similar} />

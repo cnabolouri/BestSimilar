@@ -1,7 +1,26 @@
 from pgvector.django import CosineDistance
 
 from apps.catalog.models import Title
+from apps.accounts.models import UserTastePreferences
 from apps.recommendations.models import TitleEmbedding
+
+
+def apply_user_preferences(queryset, user):
+    preferences, _ = UserTastePreferences.objects.get_or_create(user=user)
+
+    if preferences.preferred_format == UserTastePreferences.FORMAT_MOVIES:
+        queryset = queryset.filter(media_type=Title.MediaType.MOVIE)
+
+    if preferences.preferred_format == UserTastePreferences.FORMAT_TV:
+        queryset = queryset.filter(media_type=Title.MediaType.TV)
+
+    if preferences.favorite_genres:
+        queryset = queryset.filter(genres__name__in=preferences.favorite_genres)
+
+    if preferences.avoided_genres:
+        queryset = queryset.exclude(genres__name__in=preferences.avoided_genres)
+
+    return queryset.distinct()
 
 
 def get_metadata_similar_titles(source_title: Title, limit: int = 50):

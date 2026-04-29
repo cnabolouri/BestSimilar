@@ -10,7 +10,12 @@ import {
   UserRound,
 } from "lucide-react";
 import { SettingsMenuCard } from "@/components/profile/SettingsMenuCard";
-import { getCurrentProfileServer } from "@/services/server-profile";
+import {
+  getCurrentProfileServer,
+  getPrivacySettingsServer,
+  getSiteSettingsServer,
+  getTastePreferencesServer,
+} from "@/services/server-profile";
 
 export default async function ProfileSettingsPage() {
   let profile;
@@ -21,8 +26,30 @@ export default async function ProfileSettingsPage() {
     redirect(`/login?next=${encodeURIComponent("/profile/settings")}`);
   }
 
+  const [siteSettings, privacySettings, preferences] = await Promise.all([
+    getSiteSettingsServer().catch(() => null),
+    getPrivacySettingsServer().catch(() => null),
+    getTastePreferencesServer().catch(() => null),
+  ]);
+
   const username = profile.username_slug || profile.username;
   const publicProfileHref = username ? `/profile/${username}` : "/profile";
+  const publicSectionsCount = privacySettings
+    ? [
+        privacySettings.show_watchlist,
+        privacySettings.show_favorite_titles,
+        privacySettings.show_favorite_people,
+        privacySettings.show_ratings,
+        privacySettings.show_reviews,
+        privacySettings.show_watch_history,
+      ].filter(Boolean).length
+    : 0;
+  const preferenceCount = preferences
+    ? preferences.favorite_genres.length +
+      preferences.avoided_genres.length +
+      preferences.preferred_languages.length +
+      preferences.preferred_providers.length
+    : 0;
   const settings = [
     {
       title: "Personal Info",
@@ -30,6 +57,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Edit your display name, profile image, and bio shown on your public profile.",
       icon: UserRound,
+      badge: "Public profile basics",
     },
     {
       title: "Login & Security",
@@ -37,6 +65,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Change your username, email, password, and future sign-in options.",
       icon: ShieldCheck,
+      badge: "Sensitive",
     },
     {
       title: "Privacy",
@@ -44,6 +73,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Choose which public profile sections others can see, including ratings, watchlist, favorites, and history.",
       icon: Shield,
+      badge: `${publicSectionsCount} public sections`,
     },
     {
       title: "Preferences",
@@ -51,6 +81,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Manage taste preferences such as genres, languages, providers, content ratings, and preferred formats.",
       icon: SlidersHorizontal,
+      badge: `${preferenceCount} selected`,
     },
     {
       title: "Site Settings",
@@ -58,6 +89,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Customize theme behavior, layout density, autoplay, animations, and browsing experience.",
       icon: MonitorCog,
+      badge: siteSettings?.theme ?? "system",
     },
     {
       title: "Delete Account",
@@ -65,6 +97,7 @@ export default async function ProfileSettingsPage() {
       description:
         "Export your data, clear activity, or permanently delete your Simcine account.",
       icon: Trash2,
+      badge: "Dangerous",
       danger: true,
     },
   ];
@@ -101,6 +134,7 @@ export default async function ProfileSettingsPage() {
               description={item.description}
               href={item.href}
               icon={item.icon}
+              badge={item.badge}
               danger={item.danger}
             />
           ))}

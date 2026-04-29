@@ -28,7 +28,7 @@ export function PublicPersonPreviewCard({ item }: PublicPersonPreviewCardProps) 
     nestedPerson?.known_for_department || item.known_for_department || null;
 
   return (
-    <div className="group relative w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+    <div className="simcine-card group relative w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
       <Link href={slug ? `/people/${slug}` : "#"} className="block">
         <div className="relative aspect-[2/3] bg-muted">
           {image ? (
@@ -46,10 +46,10 @@ export function PublicPersonPreviewCard({ item }: PublicPersonPreviewCardProps) 
           {slug && <PersonQuickActions personSlug={slug} />}
         </div>
 
-        <div className="p-2">
-          <p className="line-clamp-2 text-sm font-medium leading-snug">{name}</p>
+        <div className="p-[var(--simcine-card-padding)]">
+          <p className="line-clamp-2 text-[length:var(--simcine-card-title-size)] font-medium leading-snug">{name}</p>
           {department && (
-            <p className="mt-1 text-xs capitalize text-muted-foreground">
+            <p className="mt-1 text-[length:var(--simcine-card-meta-size)] capitalize text-muted-foreground">
               {department}
             </p>
           )}

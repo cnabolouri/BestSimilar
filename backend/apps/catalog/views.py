@@ -3,6 +3,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from apps.catalog.models import Title
 from apps.catalog.serializers import TitleListSerializer, TitleDetailSerializer
+from apps.accounts.utils import apply_user_taste_preferences
 
 
 class TitleListAPIView(ListAPIView):
@@ -31,6 +32,10 @@ class TitleListAPIView(ListAPIView):
         language = self.request.query_params.get("language")
         age_rating = self.request.query_params.get("age_rating")
         provider = self.request.query_params.get("provider")
+        personalized = self.request.query_params.get("personalized")
+
+        if personalized == "true" and self.request.user.is_authenticated:
+            queryset = apply_user_taste_preferences(queryset, self.request.user)
 
         if q:
             queryset = queryset.filter(

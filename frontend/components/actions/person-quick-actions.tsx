@@ -1,28 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { addFavoritePerson, removeFavoritePerson } from "@/services/interactions";
 
 export function PersonQuickActions({ personSlug }: { personSlug: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
-    // There is no person status endpoint yet, so we probe auth via a lightweight
-    // request. If the interactions service returns 401/403 we know the user is
-    // logged out; any other response (including 404) means they are logged in.
     async function checkAuth() {
       try {
-        // Attempt a no-op GET that requires auth. A 401 means logged out.
-        await fetch(
+        const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1"}/interactions/favorites/people/`,
           { credentials: "include", cache: "no-store" },
-        ).then((res) => {
-          setAuthenticated(res.status !== 401 && res.status !== 403);
-        });
+        );
+        setAuthenticated(res.status !== 401 && res.status !== 403);
       } catch {
         setAuthenticated(false);
       }
@@ -36,13 +31,17 @@ export function PersonQuickActions({ personSlug }: { personSlug: string }) {
   if (!authenticated) {
     return (
       <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-        <Link
-          href={`/login?next=${encodeURIComponent(pathname)}`}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push(`/login?next=${encodeURIComponent(pathname)}`);
+          }}
           className="rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur"
-          onClick={(e) => e.stopPropagation()}
         >
           Log in to save
-        </Link>
+        </button>
       </div>
     );
   }

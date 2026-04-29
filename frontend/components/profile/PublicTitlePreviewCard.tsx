@@ -42,7 +42,7 @@ export function PublicTitlePreviewCard({
   const rating = typeof item.rating === "number" ? item.rating : null;
 
   return (
-    <div className="group relative w-36 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+    <div className="simcine-card group relative w-36 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
       <Link href={titleHref(slug, mediaType)} className="block">
         <div className="relative aspect-[2/3] bg-muted">
           {poster ? (
@@ -60,16 +60,16 @@ export function PublicTitlePreviewCard({
           {slug && <TitleQuickActions titleSlug={slug} />}
         </div>
 
-        <div className="p-2">
-          <p className="line-clamp-2 text-sm font-medium leading-snug">{name}</p>
+        <div className="p-[var(--simcine-card-padding)]">
+          <p className="line-clamp-2 text-[length:var(--simcine-card-title-size)] font-medium leading-snug">{name}</p>
           {rating !== null && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-[length:var(--simcine-card-meta-size)] text-muted-foreground">
               ★ {rating.toFixed(1)}
               {context === "rating" ? " your rating" : ""}
             </p>
           )}
           {context === "rating" && item.review ? (
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+            <p className="mt-1 line-clamp-2 text-[length:var(--simcine-card-meta-size)] text-muted-foreground">
               {item.review}
             </p>
           ) : null}

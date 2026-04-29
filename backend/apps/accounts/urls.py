@@ -17,6 +17,7 @@ from apps.accounts.views import (
     SiteSettingsAPIView,
     TastePreferencesAPIView,
 )
+from apps.accounts.views_google import GoogleLoginCompleteView, GoogleLoginRedirectView
 
 urlpatterns = [
     path("me/", MeAPIView.as_view(), name="auth-me"),
@@ -34,4 +35,6 @@ urlpatterns = [
     path("signup/", SignupAPIView.as_view(), name="auth-signup"),
     path("login/", LoginAPIView.as_view(), name="auth-login"),
     path("logout/", LogoutAPIView.as_view(), name="auth-logout"),
+    path("google/", GoogleLoginRedirectView.as_view(), name="google-login"),
+    path("google/complete/", GoogleLoginCompleteView.as_view(), name="google-login-complete"),
 ]

@@ -114,3 +114,56 @@ class TitleNewsItem(TimeStampedModel):
 
     def __str__(self):
         return f"{self.title.name} - {self.headline}"
+
+
+class TVSeason(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name="seasons",
+    )
+    tmdb_id = models.IntegerField(null=True, blank=True, db_index=True)
+    season_number = models.IntegerField(db_index=True)
+    name = models.CharField(max_length=255, blank=True)
+    overview = models.TextField(blank=True)
+    poster_path = models.CharField(max_length=500, blank=True)
+    air_date = models.DateField(null=True, blank=True)
+    episode_count = models.IntegerField(default=0)
+    vote_average = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [("title", "season_number")]
+        ordering = ["season_number"]
+
+    def __str__(self):
+        return f"{self.title} - Season {self.season_number}"
+
+
+class TVEpisode(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        related_name="episodes",
+    )
+    season = models.ForeignKey(
+        TVSeason,
+        on_delete=models.CASCADE,
+        related_name="episodes",
+    )
+    tmdb_id = models.IntegerField(null=True, blank=True, db_index=True)
+    season_number = models.IntegerField(db_index=True)
+    episode_number = models.IntegerField(db_index=True)
+    name = models.CharField(max_length=255, blank=True)
+    overview = models.TextField(blank=True)
+    still_path = models.CharField(max_length=500, blank=True)
+    air_date = models.DateField(null=True, blank=True)
+    runtime = models.IntegerField(null=True, blank=True)
+    vote_average = models.FloatField(null=True, blank=True)
+    vote_count = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [("title", "season_number", "episode_number")]
+        ordering = ["season_number", "episode_number"]
+
+    def __str__(self):
+        return f"{self.title} S{self.season_number:02d}E{self.episode_number:02d} - {self.name}"

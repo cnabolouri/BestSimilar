@@ -1,5 +1,12 @@
 import { cookies } from "next/headers";
-import type { InteractionSummary, ProfileSummary, ProfileUser } from "@/services/profile";
+import type {
+  InteractionSummary,
+  PrivacySettings,
+  ProfileSummary,
+  ProfileUser,
+  SiteSettings,
+  TastePreferences,
+} from "@/services/profile";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
@@ -30,4 +37,16 @@ export function getProfileSummaryServer() {
 
 export function getInteractionSummaryServer() {
   return serverApiFetch<InteractionSummary>("/interactions/me/summary/");
+}
+
+export function getSiteSettingsServer() {
+  return serverApiFetch<SiteSettings>("/auth/profile/site-settings/");
+}
+
+export function getPrivacySettingsServer() {
+  return serverApiFetch<PrivacySettings>("/auth/profile/privacy/");
+}
+
+export function getTastePreferencesServer() {
+  return serverApiFetch<TastePreferences>("/auth/profile/preferences/");
 }

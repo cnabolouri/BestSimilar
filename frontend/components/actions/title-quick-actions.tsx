@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   addFavoriteTitle,
@@ -15,6 +14,7 @@ import {
 
 export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [favorite, setFavorite] = useState(false);
   const [watchlist, setWatchlist] = useState(false);
@@ -36,19 +36,22 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
     loadStatus();
   }, [titleSlug]);
 
-  // Still loading — render nothing to avoid layout shift.
   if (authenticated === null) return null;
 
   if (!authenticated) {
     return (
       <div className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex justify-center opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
-        <Link
-          href={`/login?next=${encodeURIComponent(pathname)}`}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            router.push(`/login?next=${encodeURIComponent(pathname)}`);
+          }}
           className="rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur"
-          onClick={(e) => e.stopPropagation()}
         >
           Log in to save
-        </Link>
+        </button>
       </div>
     );
   }

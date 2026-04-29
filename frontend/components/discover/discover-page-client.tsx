@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { discoverTitles } from "@/services/discover";
+import { getTastePreferences } from "@/services/profile";
 import type { DiscoverResponse } from "@/types/discover";
 import { DiscoverResultsGrid } from "@/components/discover/discover-results-grid";
 import { DiscoverResultCardSkeleton } from "@/components/cards/discover-result-card-skeleton";
@@ -13,9 +14,16 @@ import { ResultsToolbar } from "@/components/results/results-toolbar";
 export function DiscoverPageClient() {
   const params = useSearchParams();
 
-  const initialPrompt = params.get("prompt") ?? "";
+  const queryGenres = params.get("genres") ?? "";
+  const queryProviders = params.get("providers") ?? "";
+  const queryPromptParts = [
+    queryGenres ? `${queryGenres.split(",").join(", ")} recommendations` : "",
+    queryProviders ? `available around ${queryProviders.split(",").join(", ")}` : "",
+  ].filter(Boolean);
+  const initialPrompt = params.get("prompt") ?? queryPromptParts.join(" ");
+  const personalized = params.get("personalized") === "true";
   const initialMediaType =
-    params.get("media_type") === "movie" ? "movie" : "tv";
+    (params.get("media_type") ?? params.get("type")) === "movie" ? "movie" : "tv";
 
   const [prompt, setPrompt] = useState(initialPrompt);
   const [mediaType, setMediaType] = useState<"movie" | "tv">(initialMediaType);
@@ -25,6 +33,47 @@ export function DiscoverPageClient() {
   const [sortBy, setSortBy] = useState("score");
   const [minRating, setMinRating] = useState("");
   const [minVotes, setMinVotes] = useState("");
+
+  useEffect(() => {
+    if (!personalized) return;
+
+    let mounted = true;
+
+    async function loadPreferences() {
+      try {
+        const preferences = await getTastePreferences();
+        if (!mounted) return;
+
+        if (preferences.preferred_format === "movies") {
+          setMediaType("movie");
+        }
+        if (preferences.preferred_format === "tv") {
+          setMediaType("tv");
+        }
+
+        if (!initialPrompt.trim()) {
+          const genreText = preferences.favorite_genres.slice(0, 4).join(", ");
+          const providerText = preferences.preferred_providers
+            .slice(0, 3)
+            .join(", ");
+          const parts = [
+            genreText ? `${genreText} recommendations` : "personalized recommendations",
+            providerText ? `available around ${providerText}` : "",
+          ].filter(Boolean);
+
+          setPrompt(parts.join(" "));
+        }
+      } catch {
+        // Logged-out users can still use the regular discover form.
+      }
+    }
+
+    loadPreferences();
+
+    return () => {
+      mounted = false;
+    };
+  }, [initialPrompt, personalized]);
 
   const filteredResults = data
     ? [...data.results]

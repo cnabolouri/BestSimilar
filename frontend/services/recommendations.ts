@@ -14,3 +14,15 @@ export async function getSimilarTitles(titleSlug: string, limit = 8) {
 
   return data.results;
 }
+
+export type PersonalizedRecommendationsResponse = {
+  results: PersonalizedTitleItem[];
+  meta: {
+    top_genres: string[];
+    count: number;
+  };
+};
+
+export async function getPersonalizedRecommendations() {
+  return apiGet<PersonalizedRecommendationsResponse>("/recommendations/personalized/");
+}

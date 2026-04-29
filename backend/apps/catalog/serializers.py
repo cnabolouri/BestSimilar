@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.catalog.models import Title, TitleNewsItem
+from apps.catalog.models import Title, TitleNewsItem, TVEpisode, TVSeason
 from apps.taxonomy.models import Genre, Keyword, Theme
 from apps.credits.models import TitleCredit
 
@@ -148,5 +148,66 @@ class TitleDetailSerializer(serializers.ModelSerializer):
         if len(set(runtimes)) == 1:
             return f"{runtimes[0]} min"
         return f"{min(runtimes)}–{max(runtimes)} min"
-    
 
+
+class TVSeasonSerializer(serializers.ModelSerializer):
+    poster_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TVSeason
+        fields = [
+            "id",
+            "tmdb_id",
+            "season_number",
+            "name",
+            "overview",
+            "poster_path",
+            "poster_url",
+            "air_date",
+            "episode_count",
+            "vote_average",
+        ]
+
+    def get_poster_url(self, obj):
+        from apps.catalog.tmdb_images import build_tmdb_image_url
+        return build_tmdb_image_url(obj.poster_path, "w342")
+
+
+class TVEpisodeSerializer(serializers.ModelSerializer):
+    still_url = serializers.SerializerMethodField()
+    user_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TVEpisode
+        fields = [
+            "id",
+            "tmdb_id",
+            "season_number",
+            "episode_number",
+            "name",
+            "overview",
+            "still_path",
+            "still_url",
+            "air_date",
+            "runtime",
+            "vote_average",
+            "vote_count",
+            "user_rating",
+        ]
+
+    def get_still_url(self, obj):
+        from apps.catalog.tmdb_images import build_tmdb_image_url
+        return build_tmdb_image_url(obj.still_path, "w300")
+
+    def get_user_rating(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+        try:
+            from apps.interactions.models import UserEpisodeRating
+            rating = UserEpisodeRating.objects.filter(
+                user=request.user, episode=obj
+            ).first()
+            return rating.rating if rating else None
+        except Exception:
+            return None

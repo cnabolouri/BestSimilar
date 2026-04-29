@@ -12,6 +12,9 @@
   --accent: #6366f1;
   --accent-foreground: #ffffff;
   --chip: #eef2ff;
+  --simcine-card-padding: 0.75rem;
+  --simcine-card-title-size: 0.9rem;
+  --simcine-card-meta-size: 0.75rem;
 }
 
 .dark {
@@ -32,6 +35,27 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+html[data-compact-cards="true"] .simcine-card {
+  --simcine-card-padding: 0.5rem;
+  --simcine-card-title-size: 0.8rem;
+  --simcine-card-meta-size: 0.7rem;
+}
+
+html[data-compact-cards="false"] .simcine-card {
+  --simcine-card-padding: 0.75rem;
+  --simcine-card-title-size: 0.9rem;
+  --simcine-card-meta-size: 0.75rem;
+}
+
+html[data-reduce-animations="true"] *,
+html[data-reduce-animations="true"] *::before,
+html[data-reduce-animations="true"] *::after {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
 }
 
 body {

@@ -64,3 +64,26 @@ class TitleRating(models.Model):
 
     def __str__(self):
         return f"{self.user} rated {self.title} {self.rating}/10"
+
+
+class UserEpisodeRating(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="episode_ratings",
+    )
+    episode = models.ForeignKey(
+        "catalog.TVEpisode",
+        on_delete=models.CASCADE,
+        related_name="user_ratings",
+    )
+    rating = models.PositiveSmallIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("user", "episode")]
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.user} rated {self.episode} {self.rating}/10"

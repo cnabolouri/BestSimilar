@@ -6,6 +6,7 @@ type SettingsMenuCardProps = {
   description: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
   danger?: boolean;
   children?: React.ReactNode;
 };
@@ -15,6 +16,7 @@ export function SettingsMenuCard({
   description,
   href,
   icon: Icon,
+  badge,
   danger = false,
   children,
 }: SettingsMenuCardProps) {
@@ -39,13 +41,20 @@ export function SettingsMenuCard({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-3">
-              <h2
-                className={`font-semibold ${
-                  danger ? "text-destructive" : "text-foreground"
-                }`}
-              >
-                {title}
-              </h2>
+              <div className="flex min-w-0 items-center gap-2">
+                <h2
+                  className={`font-semibold ${
+                    danger ? "text-destructive" : "text-foreground"
+                  }`}
+                >
+                  {title}
+                </h2>
+                {badge && (
+                  <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {badge}
+                  </span>
+                )}
+              </div>
               <ChevronRight
                 className={`h-4 w-4 shrink-0 transition group-hover:translate-x-0.5 ${
                   danger ? "text-destructive/70" : "text-muted-foreground"
