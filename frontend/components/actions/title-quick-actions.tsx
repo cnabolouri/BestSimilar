@@ -114,7 +114,8 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
-        title="Favorite"
+        title={favorite ? "Remove from my favorites" : "Favorite for me"}
+        aria-label={favorite ? "Remove from my favorites" : "Favorite for me"}
       >
         {favorite ? "♥" : "♡"}
       </button>
@@ -127,7 +128,8 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
-        title="Watchlist"
+        title={watchlist ? "Remove from my watchlist" : "Add to my watchlist"}
+        aria-label={watchlist ? "Remove from my watchlist" : "Add to my watchlist"}
       >
         +
       </button>
@@ -140,7 +142,8 @@ export function TitleQuickActions({ titleSlug }: { titleSlug: string }) {
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
-        title="Watched"
+        title={watched ? "Remove from my watched titles" : "Mark watched for me"}
+        aria-label={watched ? "Remove from my watched titles" : "Mark watched for me"}
       >
         👁
       </button>

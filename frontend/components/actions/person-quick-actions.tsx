@@ -2,7 +2,11 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { addFavoritePerson, removeFavoritePerson } from "@/services/interactions";
+import {
+  addFavoritePerson,
+  getFavoritePeople,
+  removeFavoritePerson,
+} from "@/services/interactions";
 
 export function PersonQuickActions({ personSlug }: { personSlug: string }) {
   const pathname = usePathname();
@@ -11,20 +15,18 @@ export function PersonQuickActions({ personSlug }: { personSlug: string }) {
   const [favorite, setFavorite] = useState(false);
 
   useEffect(() => {
-    async function checkAuth() {
+    async function loadStatus() {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1"}/interactions/favorites/people/`,
-          { credentials: "include", cache: "no-store" },
-        );
-        setAuthenticated(res.status !== 401 && res.status !== 403);
+        const favorites = await getFavoritePeople();
+        setFavorite(favorites.some((item) => item.person_slug === personSlug));
+        setAuthenticated(true);
       } catch {
         setAuthenticated(false);
       }
     }
 
-    checkAuth();
-  }, []);
+    loadStatus();
+  }, [personSlug]);
 
   if (authenticated === null) return null;
 
@@ -72,7 +74,8 @@ export function PersonQuickActions({ personSlug }: { personSlug: string }) {
             ? "border-foreground bg-foreground text-background"
             : "border-border bg-background/85 text-foreground backdrop-blur hover:border-accent",
         ].join(" ")}
-        title="Favorite person"
+        title={favorite ? "Remove from my favorites" : "Favorite for me"}
+        aria-label={favorite ? "Remove from my favorites" : "Favorite for me"}
       >
         {favorite ? "♥" : "♡"}
       </button>

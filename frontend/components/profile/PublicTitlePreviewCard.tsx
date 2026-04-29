@@ -43,6 +43,7 @@ export function PublicTitlePreviewCard({
 
   return (
     <div className="simcine-card group relative w-36 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+      {slug && <TitleQuickActions titleSlug={slug} />}
       <Link href={titleHref(slug, mediaType)} className="block">
         <div className="relative aspect-[2/3] bg-muted">
           {poster ? (
@@ -57,7 +58,6 @@ export function PublicTitlePreviewCard({
               {name.slice(0, 2).toUpperCase()}
             </div>
           )}
-          {slug && <TitleQuickActions titleSlug={slug} />}
         </div>
 
         <div className="p-[var(--simcine-card-padding)]">

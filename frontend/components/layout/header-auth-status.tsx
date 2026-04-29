@@ -137,18 +137,11 @@ export function HeaderAuthStatus({
 
   // Handle the signed-in state
   return (
-    <div className="flex items-center gap-2">
-      <ProfileMenu user={user} onAction={onAction} compact={compact} />
-      <button
-        type="button"
-        onClick={handleLogout}
-        className={[
-          "inline-flex h-10 items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground transition hover:opacity-90",
-          compact ? "px-3" : "px-4",
-        ].join(" ")}
-      >
-        Sign out
-      </button>
-    </div>
+    <ProfileMenu
+      user={user}
+      onAction={onAction}
+      onLogout={handleLogout}
+      compact={compact}
+    />
   );
 }

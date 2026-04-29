@@ -1,5 +1,6 @@
 import { getPersonDetail, getRelatedPeople } from "@/services/people";
 import { PersonDetailPage } from "@/components/people/person-detail-page";
+import type { RelatedPerson } from "@/types/person";
 
 export default async function PersonPage({
   params,
@@ -10,7 +11,7 @@ export default async function PersonPage({
 
   const person = await getPersonDetail(slug);
 
-  let relatedPeople = [];
+  let relatedPeople: RelatedPerson[] = [];
 
   try {
     relatedPeople = await getRelatedPeople(slug);

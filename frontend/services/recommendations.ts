@@ -1,6 +1,8 @@
 import { apiGet } from "@/lib/api";
 import type { SimilarTitle } from "@/types/title";
 
+export type PersonalizedTitleItem = SimilarTitle;
+
 export type SimilarTitlesResponse = {
   source?: unknown;
   count: number;

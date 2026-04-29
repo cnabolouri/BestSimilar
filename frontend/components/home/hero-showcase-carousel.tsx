@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { tmdbBackdropUrl, tmdbPosterUrl } from "@/lib/images";
 
 type ShowcaseItem = {
@@ -317,10 +317,10 @@ function TabletCarousel({
           <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
             <button
               type="button"
-                onClick={(e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                setIndex(dotIndex);
-                }}
+                goPrev();
+              }}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/70 text-sm font-medium text-foreground backdrop-blur transition hover:border-accent/60 hover:text-accent"
               aria-label="Previous slide"
             >
@@ -348,7 +348,7 @@ function TabletCarousel({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // parent updates via shared state
+                    setIndex(dotIndex);
                   }}
                   className={[
                     "h-2 rounded-full transition-all",

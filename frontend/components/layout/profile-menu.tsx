@@ -8,19 +8,17 @@ import { type ProfileUser } from "@/services/profile";
 const menuItems = [
   { label: "My Profile", href: "/profile" },
   { label: "Account Settings", href: "/profile/settings" },
-  { label: "Your watchlist", href: "/profile/watchlist" },
-  { label: "Your favorites", href: "/profile/favorites" },
-  { label: "Your ratings", href: "/profile/ratings" },
-  { label: "Watch history", href: "/profile/history" },
 ];
 
 export function ProfileMenu({
   user,
   onAction,
+  onLogout,
   compact = false,
 }: {
   user: ProfileUser;
   onAction?: () => void;
+  onLogout?: () => void;
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -123,6 +121,19 @@ export function ProfileMenu({
                 {item.label}
               </Link>
             ))}
+
+            {onLogout ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onLogout();
+                }}
+                className="mt-2 block w-full rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-red-400 transition hover:bg-card"
+              >
+                Logout
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

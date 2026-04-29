@@ -29,6 +29,7 @@ export function PublicPersonPreviewCard({ item }: PublicPersonPreviewCardProps) 
 
   return (
     <div className="simcine-card group relative w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+      {slug && <PersonQuickActions personSlug={slug} />}
       <Link href={slug ? `/people/${slug}` : "#"} className="block">
         <div className="relative aspect-[2/3] bg-muted">
           {image ? (
@@ -43,7 +44,6 @@ export function PublicPersonPreviewCard({ item }: PublicPersonPreviewCardProps) 
               {name.slice(0, 2).toUpperCase()}
             </div>
           )}
-          {slug && <PersonQuickActions personSlug={slug} />}
         </div>
 
         <div className="p-[var(--simcine-card-padding)]">
