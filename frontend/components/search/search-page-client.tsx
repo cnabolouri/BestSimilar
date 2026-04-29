@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { searchAll } from "@/services/search";
+import { searchPublicProfiles, type PublicProfile } from "@/services/public-profile";
 import type { UnifiedSearchResponse } from "@/types/search";
 import { UnifiedSearchResults } from "@/components/search/unified-search-results";
 import { SearchTitleCardSkeleton } from "@/components/cards/search-title-card-skeleton";
@@ -18,6 +19,7 @@ export function SearchPageClient() {
   const [query, setQuery] = useState(initialQ);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<UnifiedSearchResponse | null>(null);
+  const [profiles, setProfiles] = useState<PublicProfile[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState("relevance");
@@ -33,11 +35,17 @@ export function SearchPageClient() {
       setLoading(true);
       setError(null);
       try {
-        const response = await searchAll(initialQ.trim(), 12, {
-          ordering: sortBy,
-          media_type: mediaType,
-        });
-        if (isMounted) setData(response);
+        const [response, profileResponse] = await Promise.all([
+          searchAll(initialQ.trim(), 12, {
+            ordering: sortBy,
+            media_type: mediaType,
+          }),
+          searchPublicProfiles(initialQ.trim()),
+        ]);
+        if (isMounted) {
+          setData(response);
+          setProfiles(profileResponse);
+        }
       } catch {
         if (isMounted) setError("Search failed. Please try again.");
       } finally {
@@ -59,11 +67,15 @@ export function SearchPageClient() {
     setError(null);
 
     try {
-      const response = await searchAll(query.trim(), 12, {
-        ordering: sortBy,
-        media_type: mediaType,
-      });
+      const [response, profileResponse] = await Promise.all([
+        searchAll(query.trim(), 12, {
+          ordering: sortBy,
+          media_type: mediaType,
+        }),
+        searchPublicProfiles(query.trim()),
+      ]);
       setData(response);
+      setProfiles(profileResponse);
 
       const qs = new URLSearchParams();
       qs.set("q", query.trim());
@@ -109,6 +121,7 @@ export function SearchPageClient() {
           { label: "All", value: "all" },
           { label: "Titles", value: "titles" },
           { label: "People", value: "people" },
+          { label: "Profiles", value: "profiles" },
         ].map((item) => {
           const active = searchType === item.value;
 
@@ -184,7 +197,10 @@ export function SearchPageClient() {
       ) : null}
 
       {!loading && data ? (
-        data.titles.length === 0 && data.people.length === 0 ? (
+        (searchType === "profiles" && profiles.length === 0) ||
+        (data.titles.length === 0 &&
+          data.people.length === 0 &&
+          profiles.length === 0) ? (
           <div className="mt-8">
             <EmptyState
               title="No matches found"
@@ -192,7 +208,11 @@ export function SearchPageClient() {
             />
           </div>
         ) : (
-          <UnifiedSearchResults data={data} searchType={searchType} />
+          <UnifiedSearchResults
+            data={data}
+            profiles={profiles}
+            searchType={searchType}
+          />
         )
       ) : null}
     </div>

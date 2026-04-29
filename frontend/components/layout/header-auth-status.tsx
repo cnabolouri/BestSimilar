@@ -44,6 +44,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProfileMenu } from "@/components/layout/profile-menu";
 import { usePathname } from "next/navigation";
+import { logoutUser } from "@/services/auth";
 import { getCurrentProfile, type ProfileUser } from "@/services/profile";
 
 export function HeaderAuthStatus({
@@ -70,42 +71,84 @@ export function HeaderAuthStatus({
     loadUser();
   }, []);
 
+  async function handleLogout() {
+    const path = window.location.pathname;
+    let publicProfilePath: string | null = null;
+    const isPrivateProfilePath =
+      path === "/profile" ||
+      path === "/profile/watchlist" ||
+      path === "/profile/favorites" ||
+      path === "/profile/history" ||
+      path === "/profile/ratings" ||
+      path.startsWith("/profile/settings");
+
+    try {
+      if (isPrivateProfilePath) {
+        const profile = await getCurrentProfile();
+        const username = profile.username_slug || profile.username;
+        publicProfilePath = username ? `/profile/${username}` : null;
+      }
+    } catch {
+      publicProfilePath = null;
+    }
+
+    try {
+      await logoutUser();
+    } finally {
+      onAction?.();
+
+      if (publicProfilePath) {
+        window.location.href = publicProfilePath;
+      } else if (path.startsWith("/profile/") && !isPrivateProfilePath) {
+        window.location.href = path;
+      } else if (isPrivateProfilePath) {
+        window.location.href = "/login?next=/profile";
+      } else {
+        window.location.href = path;
+      }
+    }
+  }
+
   // Handle the signed-out state
   if (!user) {
     return (
       <div className="flex items-center gap-2">
         {!compact ? (
-          <>
-            <Link
-              href="/profile/search"
-              onClick={onAction}
-              className="inline-flex h-10 items-center rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:bg-card hover:text-foreground"
-            >
-              Find Profiles
-            </Link>
-            <Link
-              href={loginHref}
-              onClick={onAction}
-              className="inline-flex h-10 items-center rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground transition hover:bg-card hover:text-foreground"
-            >
-              Login
-            </Link>
-          </>
+          <Link
+            href={loginHref}
+            onClick={onAction}
+            className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
+          >
+            Login / Signup
+          </Link>
         ) : null}
-        <Link
-          href={compact ? loginHref : "/signup"}
-          onClick={onAction}
-          className={[
-            "inline-flex h-10 items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground transition hover:opacity-90",
-            compact ? "px-3" : "px-4",
-          ].join(" ")}
-        >
-          {compact ? "Sign in" : "Signup"}
-        </Link>
+        {compact ? (
+          <Link
+            href={loginHref}
+            onClick={onAction}
+            className="inline-flex h-10 items-center rounded-full bg-accent px-3 text-sm font-semibold text-accent-foreground transition hover:opacity-90"
+          >
+            Sign in
+          </Link>
+        ) : null}
       </div>
     );
   }
 
   // Handle the signed-in state
-  return <ProfileMenu user={user} onAction={onAction} compact={compact} />;
+  return (
+    <div className="flex items-center gap-2">
+      <ProfileMenu user={user} onAction={onAction} compact={compact} />
+      <button
+        type="button"
+        onClick={handleLogout}
+        className={[
+          "inline-flex h-10 items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground transition hover:opacity-90",
+          compact ? "px-3" : "px-4",
+        ].join(" ")}
+      >
+        Sign out
+      </button>
+    </div>
+  );
 }

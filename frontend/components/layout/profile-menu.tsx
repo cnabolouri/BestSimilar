@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { HeaderAvatar } from "@/components/layout/HeaderAvatar";
-import { logoutUser } from "@/services/auth";
-import { getCurrentProfile, type ProfileUser } from "@/services/profile";
+import { type ProfileUser } from "@/services/profile";
 
 const menuItems = [
   { label: "My Profile", href: "/profile" },
   { label: "Account Settings", href: "/profile/settings" },
-  { label: "Find Profiles", href: "/profile/search" },
   { label: "Your watchlist", href: "/profile/watchlist" },
   { label: "Your favorites", href: "/profile/favorites" },
   { label: "Your ratings", href: "/profile/ratings" },
@@ -51,45 +49,6 @@ export function ProfileMenu({
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-
-  async function handleLogout() {
-    const path = window.location.pathname;
-    let publicProfilePath: string | null = null;
-    const isPrivateProfilePath =
-      path === "/profile" ||
-      path === "/profile/watchlist" ||
-      path === "/profile/favorites" ||
-      path === "/profile/history" ||
-      path === "/profile/ratings" ||
-      path.startsWith("/profile/settings");
-
-    try {
-      if (isPrivateProfilePath) {
-        const profile = await getCurrentProfile();
-        const username = profile.username_slug || profile.username;
-        publicProfilePath = username ? `/profile/${username}` : null;
-      }
-    } catch {
-      publicProfilePath = null;
-    }
-
-    try {
-      await logoutUser();
-    } finally {
-      setOpen(false);
-      onAction?.();
-
-      if (publicProfilePath) {
-        window.location.href = publicProfilePath;
-      } else if (path.startsWith("/profile/") && !isPrivateProfilePath) {
-        window.location.href = path;
-      } else if (isPrivateProfilePath) {
-        window.location.href = "/login?next=/profile";
-      } else {
-        window.location.href = path;
-      }
-    }
-  }
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -164,14 +123,6 @@ export function ProfileMenu({
                 {item.label}
               </Link>
             ))}
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="mt-2 block w-full rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-red-400 transition hover:bg-card"
-            >
-              Sign out
-            </button>
           </div>
         </div>
       ) : null}

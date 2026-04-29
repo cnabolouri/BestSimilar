@@ -1,6 +1,6 @@
 from django.contrib.auth import login, logout
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -41,6 +41,15 @@ from apps.interactions.serializers_public import (
     PublicWatchlistPreviewSerializer,
 )
 
+PASSWORD_AUTH_BACKEND = "django.contrib.auth.backends.ModelBackend"
+
+
+def get_public_profile_or_404(username):
+    return get_object_or_404(
+        UserProfile.objects.select_related("user"),
+        Q(username_slug__iexact=username) | Q(user__username__iexact=username),
+    )
+
 
 class MeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -58,7 +67,7 @@ class SignupAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
-        login(request, user)
+        login(request, user, backend=PASSWORD_AUTH_BACKEND)
 
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
@@ -235,10 +244,7 @@ class PublicProfileAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, username):
-        profile = get_object_or_404(
-            UserProfile.objects.select_related("user"),
-            username_slug=username,
-        )
+        profile = get_public_profile_or_404(username)
         return Response(PublicUserProfileSerializer(profile).data)
 
 
@@ -268,10 +274,7 @@ class PublicProfileSummaryAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, username):
-        profile = get_object_or_404(
-            UserProfile.objects.select_related("user"),
-            username_slug=username,
-        )
+        profile = get_public_profile_or_404(username)
         target_user = profile.user
         privacy, _ = UserPrivacySettings.objects.get_or_create(user=target_user)
 
@@ -331,10 +334,7 @@ class PublicProfileOverviewAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, username):
-        profile = get_object_or_404(
-            UserProfile.objects.select_related("user"),
-            username_slug=username,
-        )
+        profile = get_public_profile_or_404(username)
         target_user = profile.user
         privacy, _ = UserPrivacySettings.objects.get_or_create(user=target_user)
 

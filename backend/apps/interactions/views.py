@@ -1,4 +1,5 @@
 from rest_framework import status
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -33,7 +34,7 @@ from apps.interactions.serializers import TitleRatingActionSerializer, TitleRati
 def get_public_profile_user_or_404(username):
     profile = get_object_or_404(
         UserProfile.objects.select_related("user"),
-        username_slug=username,
+        Q(username_slug__iexact=username) | Q(user__username__iexact=username),
     )
     return profile.user
 
