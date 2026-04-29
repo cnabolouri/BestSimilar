@@ -3,19 +3,29 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   getRatings,
   removeRating,
   type RatedTitleItem,
 } from "@/services/interactions";
+import { getCurrentProfile } from "@/services/profile";
 import { tmdbPosterUrl } from "@/lib/images";
 
 export function RatingsPageClient() {
+  const router = useRouter();
   const [items, setItems] = useState<RatedTitleItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
+      try {
+        await getCurrentProfile();
+      } catch {
+        router.replace("/login?next=/profile/ratings");
+        return;
+      }
+
       try {
         const data = await getRatings();
         setItems(data);

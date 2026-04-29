@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   getFavoritePeople,
   getFavoriteTitles,
   type FavoritePersonItem,
   type SavedTitleItem,
 } from "@/services/interactions";
+import { getCurrentProfile } from "@/services/profile";
 import { SavedTitlesClient } from "@/components/profile/saved-titles-client";
 import { FavoritePeopleClient } from "@/components/profile/favorite-people-client";
 
 type Tab = "all" | "titles" | "people";
 
 export function FavoritesPageClient() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("all");
   const [titles, setTitles] = useState<SavedTitleItem[]>([]);
   const [people, setPeople] = useState<FavoritePersonItem[]>([]);
@@ -20,6 +23,13 @@ export function FavoritesPageClient() {
 
   useEffect(() => {
     async function load() {
+      try {
+        await getCurrentProfile();
+      } catch {
+        router.replace(`/login?next=${encodeURIComponent("/profile/favorites")}`);
+        return;
+      }
+
       try {
         const [titleData, peopleData] = await Promise.all([
           getFavoriteTitles(),

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   getFavoriteTitles,
   getWatchHistory,
   getWatchlist,
   type SavedTitleItem,
 } from "@/services/interactions";
+import { getCurrentProfile } from "@/services/profile";
 import { SavedTitlesClient } from "@/components/profile/saved-titles-client";
 
 
@@ -19,12 +21,21 @@ export function SavedTitlesPageClient({
   description: string;
   type: "watchlist" | "favorites" | "history";
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<SavedTitleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function load() {
+      try {
+        await getCurrentProfile();
+      } catch {
+        router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
       try {
         const data =
             type === "watchlist"
@@ -34,7 +45,7 @@ export function SavedTitlesPageClient({
                 : await getWatchHistory();
         setItems(data);
       } catch {
-        setError("Please sign in to view this page.");
+        setError("Failed to load. Please try again.");
       } finally {
         setLoading(false);
       }

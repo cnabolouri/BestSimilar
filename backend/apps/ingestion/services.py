@@ -1,4 +1,6 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from django.conf import settings
 
 
@@ -6,17 +8,21 @@ class TMDBClient:
     def __init__(self) -> None:
         self.base_url = settings.TMDB_BASE_URL
         self.access_token = settings.TMDB_ACCESS_TOKEN
+        self.session = requests.Session()
+        retries = Retry(total=3, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
 
     @property
     def headers(self) -> dict:
         return {
             "Authorization": f"Bearer {self.access_token}",
             "accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         }
 
     def get(self, path: str, params: dict | None = None) -> dict:
         url = f"{self.base_url}{path}"
-        response = requests.get(url, headers=self.headers, params=params or {}, timeout=30)
+        response = self.session.get(url, headers=self.headers, params=params or {}, timeout=30)
         response.raise_for_status()
         return response.json()
 

@@ -12,6 +12,7 @@ dist/
 out/
 
 # Misc
+.venv
 .DS_Store
 *.pem
 .env

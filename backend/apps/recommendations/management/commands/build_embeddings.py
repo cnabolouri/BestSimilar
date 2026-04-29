@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from apps.catalog.models import Title
 from apps.recommendations.embeddings import build_embedding_text, generate_embedding
 from apps.recommendations.models import TitleEmbedding
-
+import time
 
 class Command(BaseCommand):
     help = "Generate Gemini embeddings for titles"
@@ -49,5 +49,7 @@ class Command(BaseCommand):
 
             processed += 1
             self.stdout.write(f"Embedded: {title.slug}")
+            time.sleep(1)  # Add a delay to avoid hitting rate limits
 
         self.stdout.write(self.style.SUCCESS(f"Done. Embedded {processed} titles."))
+        

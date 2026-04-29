@@ -1,9 +1,8 @@
-import requests
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.dateparse import parse_date
 
 from apps.catalog.models import Title, TVEpisode, TVSeason
+from apps.ingestion.services import TMDBClient
 
 
 class Command(BaseCommand):
@@ -33,30 +32,23 @@ class Command(BaseCommand):
         if not title.tmdb_id:
             raise CommandError("Title does not have a tmdb_id.")
 
-        api_key = getattr(settings, "TMDB_API_KEY", None)
-        if not api_key:
-            raise CommandError("TMDB_API_KEY is missing from settings.")
+        client = TMDBClient()
 
         if selected_season is not None:
             seasons_to_import = [selected_season]
         else:
             seasons_to_import = self._get_season_numbers(
-                title, language, api_key, include_specials
+                title, language, include_specials, client
             )
 
         for season_number in seasons_to_import:
-            self._import_season(title, season_number, language, api_key)
+            self._import_season(title, season_number, language, client)
 
-    def _get_season_numbers(self, title, language, api_key, include_specials):
-        """Fetch the season list from the TMDB TV detail endpoint."""
-        url = f"https://api.themoviedb.org/3/tv/{title.tmdb_id}"
-        response = requests.get(
-            url,
-            params={"api_key": api_key, "language": language},
-            timeout=20,
+    def _get_season_numbers(self, title, language, include_specials, client):
+        data = client.get(
+            f"/tv/{title.tmdb_id}",
+            params={"language": language},
         )
-        response.raise_for_status()
-        data = response.json()
 
         seasons = data.get("seasons") or []
         numbers = [
@@ -73,15 +65,11 @@ class Command(BaseCommand):
 
         return numbers
 
-    def _import_season(self, title, season_number, language, api_key):
-        url = f"https://api.themoviedb.org/3/tv/{title.tmdb_id}/season/{season_number}"
-        response = requests.get(
-            url,
-            params={"api_key": api_key, "language": language},
-            timeout=20,
+    def _import_season(self, title, season_number, language, client):
+        data = client.get(
+            f"/tv/{title.tmdb_id}/season/{season_number}",
+            params={"language": language},
         )
-        response.raise_for_status()
-        data = response.json()
 
         season, _ = TVSeason.objects.update_or_create(
             title=title,

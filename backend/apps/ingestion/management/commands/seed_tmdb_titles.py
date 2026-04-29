@@ -23,7 +23,11 @@ class Command(BaseCommand):
             for item in result.get("results", []):
                 tmdb_id = item["id"]
                 details = client.get_movie_details(tmdb_id)
-                watch_providers = client.get_movie_watch_providers(tmdb_id)
+                try:
+                    watch_providers = client.get_movie_watch_providers(tmdb_id)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipping watch providers for movie {tmdb_id}: {e}"))
+                    watch_providers = {}
 
                 RawTMDBPayload.objects.create(
                     source_entity=RawTMDBPayload.SourceEntity.MOVIE,
@@ -37,7 +41,11 @@ class Command(BaseCommand):
             for item in result.get("results", []):
                 tmdb_id = item["id"]
                 details = client.get_tv_details(tmdb_id)
-                watch_providers = client.get_tv_watch_providers(tmdb_id)
+                try:
+                    watch_providers = client.get_tv_watch_providers(tmdb_id)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f"Skipping watch providers for TV {tmdb_id}: {e}"))
+                    watch_providers = {}
 
                 RawTMDBPayload.objects.create(
                     source_entity=RawTMDBPayload.SourceEntity.TV,

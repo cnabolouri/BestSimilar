@@ -11,3 +11,4 @@ google-genai>=1.0.0
 django-allauth[socialaccount]>=65.0,<66.0
 PyJWT>=2.8,<3.0
 cryptography>=42.0,<44.0
+django-allauth
